@@ -3,9 +3,7 @@
 const MediaManager = {
     currentImage: null,
     currentImageUrl: null, // URL/dataURL da imagem para Three.js
-    currentVideo: null,
     imagePixels: null,
-    videoPixels: null,
     imageColors: [],
     processedImage: null, // Imagem processada sem fundo
     imageContours: [], // Contornos detectados da imagem
@@ -38,27 +36,6 @@ const MediaManager = {
                 console.log('Imagem carregada:', loadedImg.width, 'x', loadedImg.height);
             }, () => {
                 console.error('Erro ao carregar imagem');
-            });
-        };
-        reader.readAsDataURL(file);
-    },
-    
-    // Carregar vídeo
-    loadVideo(file) {
-        if (!file || !file.type.startsWith('video/')) {
-            console.warn('Arquivo não é um vídeo válido');
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            // createVideo retorna um elemento HTML5 video, que é o que precisamos
-            const vid = createVideo(e.target.result, () => {
-                vid.hide();
-                vid.loop();
-                vid.volume(0);
-                this.currentVideo = vid;
-                console.log('Vídeo carregado');
             });
         };
         reader.readAsDataURL(file);
@@ -846,10 +823,6 @@ const MediaManager = {
             this.currentImage = null;
         }
         this.currentImageUrl = null;
-        if (this.currentVideo) {
-            this.currentVideo.remove();
-            this.currentVideo = null;
-        }
         if (this.processedImage) {
             this.processedImage.remove();
             this.processedImage = null;
@@ -864,11 +837,6 @@ const MediaManager = {
     // Verificar se há imagem carregada
     hasImage() {
         return this.currentImage !== null;
-    },
-    
-    // Verificar se há vídeo carregado
-    hasVideo() {
-        return this.currentVideo !== null;
     }
 };
 

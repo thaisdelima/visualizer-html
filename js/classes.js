@@ -85,13 +85,17 @@ class MatrixDrop {
         this.speed = random(2, 10);
         this.chars = [];
         this.len = floor(random(5, 20));
+        // Caracteres alfanuméricos: A-Z, a-z, 0-9
+        const alphanumeric = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         for (let i = 0; i < this.len; i++) {
-            this.chars.push(String.fromCharCode(0x30A0 + round(random(96))));
+            this.chars.push(alphanumeric[floor(random(alphanumeric.length))]);
         }
     }
     
-    fall(speed) {
-        this.y += this.speed * speed;
+    fall(speed, bass) {
+        // Velocidade baseada no grave: mapeia o bass (0-255) para multiplicador de velocidade
+        let bassMultiplier = map(bass, 0, 255, 0.5, 2.5);
+        this.y += this.speed * speed * bassMultiplier;
         if (this.y > height) {
             this.y = random(-200, -100);
             this.speed = random(2, 10);
@@ -126,32 +130,79 @@ class MatrixDrop {
 }
 
 class ColorParticle {
-    constructor(color) {
+    constructor(color, startX, startY) {
         this.color = color;
-        this.pos = createVector(random(-width/2, width/2), random(-height/2, height/2));
-        this.vel = p5.Vector.random2D().mult(random(2, 5));
+        // Posição inicial na imagem (em coordenadas da tela)
+        this.startX = startX || random(-width/2, width/2);
+        this.startY = startY || random(-height/2, height/2);
+        
+        // Sistema de profundidade: z começa em 0 (na imagem) e aumenta (vem em direção ao visualizador)
+        this.z = 0;
+        this.zSpeed = random(2, 6);
+        
+        // Velocidade lateral suave (para movimento mais natural)
+        this.velX = random(-1, 1);
+        this.velY = random(-1, 1);
+        
         this.life = 255;
-        this.size = random(3, 8);
+        this.baseSize = random(3, 8);
     }
     
     update(level, speed) {
-        this.pos.add(this.vel.copy().mult(speed));
-        this.life -= 3;
+        // Mover em direção ao visualizador (aumentar z)
+        this.z += this.zSpeed * speed;
+        
+        // Movimento lateral suave
+        this.startX += this.velX * speed * 0.5;
+        this.startY += this.velY * speed * 0.5;
+        
+        // Reduzir vida
+        this.life -= 2;
+        
+        // Adicionar variação baseada no áudio
         if (level > 0.3) {
-            this.vel.add(p5.Vector.random2D().mult(0.5));
+            this.velX += random(-0.2, 0.2);
+            this.velY += random(-0.2, 0.2);
+            // Limitar velocidade lateral
+            this.velX = constrain(this.velX, -2, 2);
+            this.velY = constrain(this.velY, -2, 2);
         }
     }
     
     display() {
+        // Calcular posição projetada na tela baseada na profundidade
+        // Quando z = 0, partícula está na imagem
+        // Quando z aumenta, partícula se aproxima do visualizador
+        let perspective = 200; // Distância focal
+        let scale = perspective / (perspective + this.z);
+        
+        // Posição projetada (mantém posição inicial mas com perspectiva)
+        let x = this.startX * scale;
+        let y = this.startY * scale;
+        
+        // Tamanho aumenta conforme se aproxima (efeito de profundidade)
+        let size = this.baseSize * (1 + this.z / 100);
+        
+        // Opacidade diminui conforme se afasta muito
+        let alpha = map(this.z, 0, 500, this.life, this.life * 0.3);
+        alpha = constrain(alpha, 0, this.life);
+        
         noStroke();
-        fill(this.color.h, this.color.s, this.color.b, this.life);
-        ellipse(this.pos.x, this.pos.y, this.size);
+        fill(this.color.h, this.color.s, this.color.b, alpha);
+        ellipse(x, y, size, size);
+        
+        // Adicionar brilho para partículas mais próximas
+        if (this.z > 50 && this.z < 200) {
+            fill(this.color.h, this.color.s * 0.5, this.color.b, alpha * 0.3);
+            ellipse(x, y, size * 1.5, size * 1.5);
+        }
     }
     
     isDead() {
-        return this.life <= 0 || 
-               this.pos.x < -width/2 - 50 || this.pos.x > width/2 + 50 ||
-               this.pos.y < -height/2 - 50 || this.pos.y > height/2 + 50;
+        // Partícula morre quando sai muito da tela ou quando z fica muito grande
+        return this.life <= 0 || this.z > 1000 ||
+               this.startX < -width/2 - 200 || this.startX > width/2 + 200 ||
+               this.startY < -height/2 - 200 || this.startY > height/2 + 200;
     }
 }
 

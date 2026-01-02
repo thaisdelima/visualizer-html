@@ -25,8 +25,9 @@ const Controls = {
                         btn.className = `p-2 border rounded transition text-center flex justify-between px-4 ${i === n ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
                     }
                 }
-                // Cenas com Mídia (14-20)
+                // Cenas com Mídia (15, 17-20)
                 for (let i = 14; i <= 20; i++) {
+                    if (i === 14 || i === 16) continue; // Pular cenas 14 e 16 (removidas)
                     let btn = this.controlsWindow.document.getElementById(`btn-scene-${i}`);
                     if (btn) {
                         let activeClass = 'bg-pink-900 border-pink-500';

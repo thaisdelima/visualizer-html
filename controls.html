@@ -12,14 +12,48 @@
     <link rel="stylesheet" href="css/style.css">
     
     <style>
+        html {
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
         body {
             background-color: #000;
             color: white;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 100%;
+            margin: 0;
+        }
+        
+        /* Scrollbar personalizada para WebKit (Chrome, Safari, Edge) */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a202c;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #718096;
+        }
+        
+        /* Scrollbar para Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #4a5568 #1a202c;
         }
     </style>
 </head>
-<body class="p-4">
-    <div class="max-w-4xl mx-auto">
+<body class="p-4 min-h-full">
+    <div class="max-w-4xl mx-auto pb-4">
         <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
             <h2 class="text-cyan-400 font-bold text-xl">CONTROLES</h2>
             <div class="flex items-center gap-4">
@@ -32,6 +66,44 @@
             </div>
         </div>
 
+        <!-- Cenas sem Imagem -->
+        <div class="mb-5">
+            <h3 class="text-purple-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas sem Imagem</h3>
+            
+            <!-- Cenas 2D (p5.js) -->
+            <div class="mb-3">
+                <h4 class="text-gray-400 text-xs mb-2 uppercase tracking-wider">2D (p5.js)</h4>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 max-h-40 overflow-y-auto overflow-x-hidden pr-2" style="scrollbar-width: thin; scrollbar-color: #4a5568 #1a202c;">
+                    <button onclick="changeScene(1)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-1">Espectro</button>
+                    <button onclick="changeScene(2)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-2">Partículas</button>
+                    <button onclick="changeScene(3)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-3">Túnel</button>
+                    <button onclick="changeScene(4)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-4">Glitch</button>
+                    <button onclick="changeScene(5)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-5">Onda</button>
+                    <button onclick="changeScene(6)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-6">Mandala</button>
+                    <button onclick="changeScene(7)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-7">Matrix</button>
+                    <button onclick="changeScene(8)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-8">Pixels</button>
+                    <button onclick="changeScene(9)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-9">Estrelas</button>
+                    <button onclick="changeScene(10)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-10">Flow</button>
+                </div>
+            </div>
+            
+            <!-- Cenas 3D (Three.js) -->
+            <div>
+                <h4 class="text-gray-400 text-xs mb-2 uppercase tracking-wider">3D (Three.js)</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button onclick="changeScene(11)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-11">
+                        <span>City</span> <span class="text-gray-500 text-[10px] mt-1">[Q]</span>
+                    </button>
+                    <button onclick="changeScene(12)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-12">
+                        <span>Vortex</span> <span class="text-gray-500 text-[10px] mt-1">[W]</span>
+                    </button>
+                    <button onclick="changeScene(13)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-13">
+                        <span>Planet</span> <span class="text-gray-500 text-[10px] mt-1">[E]</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Upload de Mídia -->
         <div class="mb-5 p-3 bg-gray-900/50 rounded border border-gray-700">
             <h3 class="text-pink-400 font-bold mb-3 uppercase tracking-wider text-sm">Mídia de Referência</h3>
@@ -40,60 +112,21 @@
                     <label class="block mb-1 text-xs text-gray-400">Imagem</label>
                     <input type="file" id="image-upload" accept="image/*" class="w-full text-xs text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500">
                 </div>
-                <div>
-                    <label class="block mb-1 text-xs text-gray-400">Vídeo</label>
-                    <input type="file" id="video-upload" accept="video/*" class="w-full text-xs text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500">
-                </div>
                 <button onclick="clearMedia()" class="w-full py-2 bg-red-600/50 hover:bg-red-600 text-white text-xs rounded transition">
                     Limpar Mídia
                 </button>
             </div>
         </div>
 
-        <!-- Cenas p5.js -->
+        <!-- Cenas com Imagem -->
         <div class="mb-5">
-            <h3 class="text-purple-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas 2D (p5.js)</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 max-h-40 overflow-y-auto pr-2">
-                <button onclick="changeScene(1)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-1">1. Espectro</button>
-                <button onclick="changeScene(2)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-2">2. Partículas</button>
-                <button onclick="changeScene(3)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-3">3. Túnel</button>
-                <button onclick="changeScene(4)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-4">4. Glitch</button>
-                <button onclick="changeScene(5)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-5">5. Onda</button>
-                <button onclick="changeScene(6)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-6">6. Mandala</button>
-                <button onclick="changeScene(7)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-7">7. Matrix</button>
-                <button onclick="changeScene(8)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-8">8. Pixels</button>
-                <button onclick="changeScene(9)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-9">9. Estrelas</button>
-                <button onclick="changeScene(10)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-10">10. Flow</button>
-            </div>
-        </div>
-
-        <!-- Cenas com Mídia -->
-        <div class="mb-5">
-            <h3 class="text-pink-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas com Mídia</h3>
+            <h3 class="text-pink-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas com Imagem</h3>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                <button onclick="changeScene(14)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-14">14. Imagem Distorcida</button>
-                <button onclick="changeScene(15)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-15">15. Partículas de Cor</button>
-                <button onclick="changeScene(16)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-16">16. Vídeo Reativo</button>
-                <button onclick="changeScene(17)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-17">17. Pixel Art</button>
-                <button onclick="changeScene(18)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-18">18. Contornos Reativos</button>
-                <button onclick="changeScene(19)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-19">19. Formas Reativas</button>
-                <button onclick="changeScene(20)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-20">20. Partículas de Forma</button>
-            </div>
-        </div>
-
-        <!-- Cenas Three.js -->
-        <div class="mb-5">
-            <h3 class="text-orange-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas 3D (Three.js)</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button onclick="changeScene(11)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-11">
-                    <span>11. City</span> <span class="text-gray-500 text-[10px] mt-1">[Q]</span>
-                </button>
-                <button onclick="changeScene(12)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-12">
-                    <span>12. Vortex</span> <span class="text-gray-500 text-[10px] mt-1">[W]</span>
-                </button>
-                <button onclick="changeScene(13)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-13">
-                    <span>13. Planet</span> <span class="text-gray-500 text-[10px] mt-1">[E]</span>
-                </button>
+                <button onclick="changeScene(15)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-15">Partículas de Cor</button>
+                <button onclick="changeScene(17)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-17">Pixel Art</button>
+                <button onclick="changeScene(18)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-18">Contornos Reativos</button>
+                <button onclick="changeScene(19)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-19">Formas Reativas</button>
+                <button onclick="changeScene(20)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-20">Partículas de Forma</button>
             </div>
         </div>
 
@@ -208,8 +241,9 @@
                     btn.className = `p-2 border rounded transition text-center flex justify-between px-4 ${i === currentScene ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
                 }
             }
-            // Cenas com Mídia (14-20)
+            // Cenas com Mídia (15, 17-20)
             for (let i = 14; i <= 20; i++) {
+                if (i === 14 || i === 16) continue; // Pular cenas 14 e 16 (removidas)
                 let btn = document.getElementById(`btn-scene-${i}`);
                 if (btn) {
                     let activeClass = 'bg-pink-900 border-pink-500';
@@ -263,12 +297,6 @@
             }
         }
         
-        function loadVideo(file) {
-            if (window.opener && window.opener.MediaManager) {
-                window.opener.MediaManager.loadVideo(file);
-            }
-        }
-        
         function clearMedia() {
             if (window.opener && window.opener.MediaManager) {
                 window.opener.MediaManager.clear();
@@ -278,20 +306,11 @@
         // Event listeners para upload
         window.addEventListener('load', function() {
             let imageUpload = document.getElementById('image-upload');
-            let videoUpload = document.getElementById('video-upload');
             
             if (imageUpload) {
                 imageUpload.addEventListener('change', function(e) {
                     if (e.target.files && e.target.files[0]) {
                         loadImage(e.target.files[0]);
-                    }
-                });
-            }
-            
-            if (videoUpload) {
-                videoUpload.addEventListener('change', function(e) {
-                    if (e.target.files && e.target.files[0]) {
-                        loadVideo(e.target.files[0]);
                     }
                 });
             }

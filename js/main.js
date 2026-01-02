@@ -145,8 +145,8 @@ function draw() {
     }
 
     // Controle de Renderização
-    if (currentScene > 10 && currentScene <= 13 || currentScene === 14) {
-        // MODO 3D: Three.js (cenas 11-13 e 14)
+    if (currentScene > 10 && currentScene <= 13) {
+        // MODO 3D: Three.js (cenas 11-13)
         if (typeof ThreeScenes === 'undefined' || !ThreeScenes.getThreeRenderer) {
             console.error('ThreeScenes não está disponível');
             return;
@@ -177,7 +177,7 @@ function draw() {
         }
 
         push();
-        if (![7, 8, 10, 14, 15, 16, 17, 18, 19, 20].includes(currentScene)) {
+        if (![7, 8, 10, 15, 17, 18, 19, 20].includes(currentScene)) {
             translate(width / 2, height / 2);
         }
 
@@ -193,7 +193,6 @@ function draw() {
             case 9: P5Scenes.sceneStarfield(params, stars, AudioManager.audioData); break;
             case 10: P5Scenes.sceneFlow(params, AudioManager.audioData); break;
             case 15: P5Scenes.sceneColorParticles(params, particles, AudioManager.audioData); break;
-            case 16: P5Scenes.sceneVideoReactive(params, AudioManager.audioData); break;
             case 17: P5Scenes.scenePixelArt(params, AudioManager.audioData); break;
             case 18: P5Scenes.sceneReactiveContours(params, AudioManager.audioData); break;
             case 19: P5Scenes.sceneReactiveShapes(params, AudioManager.audioData); break;

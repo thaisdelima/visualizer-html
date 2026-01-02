@@ -7,17 +7,11 @@ const ThreeScenes = {
     threeGroup1: null,
     threeGroup2: null,
     threeGroup3: null,
-    threeGroup4: null,
     threeObjects: {
         cubes: [],
         tunnelParticles: null,
         sphere: null,
-        sphereWire: null,
-        imagePlane: null,
-        imageTexture: null,
-        imageMaterial: null,
-        lastImageId: null,
-        orthoCamera: null
+        sphereWire: null
     },
     
     initThreeJS() {
@@ -99,60 +93,6 @@ const ThreeScenes = {
 
         this.threeGroup3.visible = false;
         this.threeScene.add(this.threeGroup3);
-
-        // --- Cena 14: Imagem Distorcida ---
-        this.threeGroup4 = new THREE.Group();
-        
-        // Criar shader material para distorção
-        const vertexShader = `
-            uniform float time;
-            uniform float distortion;
-            varying vec2 vUv;
-            
-            void main() {
-                vUv = uv;
-                vec3 pos = position;
-                
-                // Aplicar distorção baseada em ondas
-                pos.x += sin(uv.y * 10.0 + time) * distortion;
-                pos.y += cos(uv.x * 10.0 + time) * distortion * 0.3;
-                
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-            }
-        `;
-        
-        const fragmentShader = `
-            uniform sampler2D imageTexture;
-            varying vec2 vUv;
-            
-            void main() {
-                vec4 color = texture2D(imageTexture, vUv);
-                gl_FragColor = color;
-            }
-        `;
-        
-        // Material com shader (será atualizado quando a imagem for carregada)
-        this.threeObjects.imageMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 0 },
-                distortion: { value: 0 },
-                imageTexture: { value: null }
-            },
-            vertexShader: vertexShader,
-            fragmentShader: fragmentShader,
-            side: THREE.DoubleSide
-        });
-        
-            // Criar plano que ocupa toda a tela
-            // Usar OrthographicCamera para renderizar plano 2D
-            const planeGeometry = new THREE.PlaneGeometry(2, 2, 100, 100);
-            this.threeObjects.imagePlane = new THREE.Mesh(planeGeometry, this.threeObjects.imageMaterial);
-            this.threeObjects.imagePlane.position.set(0, 0, 0);
-            this.threeObjects.imagePlane.rotation.x = 0;
-            this.threeGroup4.add(this.threeObjects.imagePlane);
-        
-        this.threeGroup4.visible = false;
-        this.threeScene.add(this.threeGroup4);
     },
     
     drawThreeJS(currentScene, params, audioData) {
@@ -244,7 +184,6 @@ const ThreeScenes = {
             this.threeGroup1.visible = false;
             this.threeGroup2.visible = false;
             this.threeGroup3.visible = true;
-            this.threeGroup4.visible = false;
 
             this.threeCamera.position.set(0, 0, 40);
             this.threeCamera.lookAt(0, 0, 0);
@@ -270,191 +209,6 @@ const ThreeScenes = {
             }
         }
 
-        // --- Cena 14: Imagem Distorcida ---
-        if (currentScene === 14) {
-            this.threeGroup1.visible = false;
-            this.threeGroup2.visible = false;
-            this.threeGroup3.visible = false;
-            this.threeGroup4.visible = true;
-
-            // Verificar se há imagem carregada
-            if (!MediaManager.hasImage() || !MediaManager.currentImage) {
-                console.log('Cena 14: Nenhuma imagem carregada');
-                // Renderizar tela preta
-                this.threeRenderer.render(this.threeScene, this.threeObjects.orthoCamera || this.threeCamera);
-                return;
-            }
-            
-            console.log('Cena 14: Imagem encontrada, dimensões:', MediaManager.currentImage.width, 'x', MediaManager.currentImage.height);
-
-            const img = MediaManager.currentImage;
-            const imageUrl = MediaManager.currentImageUrl;
-            const currentImageId = (imageUrl || '') + '_' + img.width + '_' + img.height;
-            
-            // Carregar ou atualizar textura da imagem
-            if (!this.threeObjects.imageTexture || this.threeObjects.lastImageId !== currentImageId) {
-                // Limpar textura anterior se existir
-                if (this.threeObjects.imageTexture) {
-                    this.threeObjects.imageTexture.dispose();
-                }
-                
-                // Método preferencial: usar TextureLoader com a URL/dataURL
-                if (imageUrl) {
-                    const loader = new THREE.TextureLoader();
-                    this.threeObjects.imageTexture = loader.load(
-                        imageUrl,
-                        (texture) => {
-                            console.log('Textura carregada com sucesso via TextureLoader');
-                            texture.flipY = false;
-                            this.threeObjects.imageMaterial.uniforms.imageTexture.value = texture;
-                            this.threeObjects.imageMaterial.needsUpdate = true;
-                        },
-                        undefined,
-                        (error) => {
-                            console.error('Erro ao carregar textura:', error);
-                        }
-                    );
-                    this.threeObjects.lastImageId = currentImageId;
-                } else {
-                    // Fallback: tentar converter p5.Image para canvas
-                    console.log('Tentando converter p5.Image para canvas...');
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    
-                    let imageDrawn = false;
-                    
-                    // Tentar diferentes métodos para obter a imagem
-                    if (img.elt && (img.elt instanceof HTMLImageElement || img.elt instanceof HTMLCanvasElement)) {
-                        try {
-                            ctx.drawImage(img.elt, 0, 0);
-                            imageDrawn = true;
-                        } catch (e) {
-                            console.log('Método elt falhou:', e);
-                        }
-                    }
-                    
-                    if (!imageDrawn && img.canvas) {
-                        try {
-                            ctx.drawImage(img.canvas, 0, 0);
-                            imageDrawn = true;
-                        } catch (e) {
-                            console.log('Método canvas falhou:', e);
-                        }
-                    }
-                    
-                    if (!imageDrawn) {
-                        try {
-                            const imgCopy = img.get();
-                            if (imgCopy && imgCopy.canvas) {
-                                ctx.drawImage(imgCopy.canvas, 0, 0);
-                                imageDrawn = true;
-                            } else if (imgCopy && imgCopy.elt) {
-                                ctx.drawImage(imgCopy.elt, 0, 0);
-                                imageDrawn = true;
-                            }
-                        } catch (e) {
-                            console.log('Método get() falhou:', e);
-                        }
-                    }
-                    
-                    if (imageDrawn) {
-                        this.threeObjects.imageTexture = new THREE.CanvasTexture(canvas);
-                        this.threeObjects.imageTexture.flipY = false;
-                        this.threeObjects.imageTexture.needsUpdate = true;
-                        this.threeObjects.imageMaterial.uniforms.imageTexture.value = this.threeObjects.imageTexture;
-                        this.threeObjects.lastImageId = currentImageId;
-                        console.log('Textura criada via canvas:', canvas.width, 'x', canvas.height);
-                    } else {
-                        console.error('Não foi possível converter imagem para textura');
-                        return;
-                    }
-                }
-            }
-
-            // Configurar câmera ortográfica para plano 2D que ocupa toda a tela
-            // Usar coordenadas em pixels para ocupar toda a tela
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            
-            // Criar ou atualizar câmera ortográfica
-            if (!this.threeObjects.orthoCamera) {
-                this.threeObjects.orthoCamera = new THREE.OrthographicCamera(
-                    -w / 2, w / 2,  // left, right
-                    h / 2, -h / 2,  // top, bottom
-                    0.1, 1000
-                );
-                this.threeObjects.orthoCamera.position.z = 1;
-                this.threeObjects.orthoCamera.lookAt(0, 0, 0);
-            } else {
-                // Atualizar dimensões da câmera se a janela foi redimensionada
-                this.threeObjects.orthoCamera.left = -w / 2;
-                this.threeObjects.orthoCamera.right = w / 2;
-                this.threeObjects.orthoCamera.top = h / 2;
-                this.threeObjects.orthoCamera.bottom = -h / 2;
-                this.threeObjects.orthoCamera.updateProjectionMatrix();
-            }
-            
-            const orthoCamera = this.threeObjects.orthoCamera;
-
-            // Ajustar plano para ocupar toda a tela mantendo proporção da imagem
-            // img já foi declarado acima
-            const imgAspect = img.width / img.height;
-            const screenAspect = w / h;
-            
-            let planeWidth = w;
-            let planeHeight = h;
-            
-            // Fazer a imagem ocupar toda a tela (cobrir toda a área)
-            if (imgAspect > screenAspect) {
-                // Imagem mais larga - ajustar altura para cobrir
-                planeHeight = w / imgAspect;
-            } else {
-                // Imagem mais alta - ajustar largura para cobrir
-                planeWidth = h * imgAspect;
-            }
-            
-            // Atualizar geometria do plano se necessário
-            const currentGeo = this.threeObjects.imagePlane.geometry;
-            if (Math.abs(currentGeo.parameters.width - planeWidth) > 1 ||
-                Math.abs(currentGeo.parameters.height - planeHeight) > 1) {
-                currentGeo.dispose();
-                this.threeObjects.imagePlane.geometry = new THREE.PlaneGeometry(planeWidth, planeHeight, 100, 100);
-            }
-
-            // Verificar se a textura foi carregada e está pronta
-            if (!this.threeObjects.imageTexture) {
-                console.warn('Textura não carregada ainda');
-                // Renderizar tela preta enquanto carrega
-                if (this.threeObjects.orthoCamera) {
-                    this.threeRenderer.render(this.threeScene, this.threeObjects.orthoCamera);
-                }
-                return;
-            }
-            
-            // Verificar se a textura tem imagem carregada
-            if (!this.threeObjects.imageTexture.image || 
-                (this.threeObjects.imageTexture.image && !this.threeObjects.imageTexture.image.complete)) {
-                console.log('Aguardando imagem carregar...');
-                return;
-            }
-
-            // Atualizar uniformes do shader
-            let distortion = map(bass, 0, 255, 0, 0.15) * params.sens * 0.4;
-            this.threeObjects.imageMaterial.uniforms.distortion.value = distortion;
-            this.threeObjects.imageMaterial.uniforms.time.value = time;
-            
-            // Garantir que a textura está definida
-            if (this.threeObjects.imageMaterial.uniforms.imageTexture.value !== this.threeObjects.imageTexture) {
-                this.threeObjects.imageMaterial.uniforms.imageTexture.value = this.threeObjects.imageTexture;
-            }
-
-            // Renderizar com câmera ortográfica
-            this.threeRenderer.render(this.threeScene, orthoCamera);
-            return;
-        }
-
         this.threeRenderer.render(this.threeScene, this.threeCamera);
     },
     
@@ -467,17 +221,6 @@ const ThreeScenes = {
             this.threeCamera.aspect = window.innerWidth / window.innerHeight;
             this.threeCamera.updateProjectionMatrix();
             this.threeRenderer.setSize(window.innerWidth, window.innerHeight);
-            
-            // Atualizar câmera ortográfica se existir
-            if (this.threeObjects.orthoCamera) {
-                const w = window.innerWidth;
-                const h = window.innerHeight;
-                this.threeObjects.orthoCamera.left = -w / 2;
-                this.threeObjects.orthoCamera.right = w / 2;
-                this.threeObjects.orthoCamera.top = h / 2;
-                this.threeObjects.orthoCamera.bottom = -h / 2;
-                this.threeObjects.orthoCamera.updateProjectionMatrix();
-            }
         }
     }
 };
