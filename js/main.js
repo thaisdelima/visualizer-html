@@ -9,7 +9,8 @@ let params = {
     speed: 1.0,
     hue: 0,
     trail: 40,
-    strobe: false
+    strobe: false,
+    palette: 'neon'
 };
 
 // Elementos auxiliares p5
@@ -38,6 +39,11 @@ window.updateParam = (k, v) => {
 window.triggerStrobe = (v) => { 
     if (typeof Controls !== 'undefined') {
         Controls.triggerStrobe(params, v);
+    }
+};
+window.changePalette = (paletteName) => {
+    if (typeof Controls !== 'undefined') {
+        Controls.changePalette(paletteName);
     }
 };
 

@@ -25,9 +25,15 @@ class Particle {
         }
     }
     
-    display(h) {
+    display(h, params = null, audioData = null) {
         noStroke();
-        fill((h + this.life) % 360, 200, 255, this.life);
+        if (params && audioData && typeof ColorPalettes !== 'undefined') {
+            let colorIndex = floor(this.life / 50) % 4;
+            let color = ColorPalettes.getColor(params.palette || 'neon', colorIndex, h + this.life, audioData);
+            fill(color.h, color.s, color.b, this.life);
+        } else {
+            fill((h + this.life) % 360, 200, 255, this.life);
+        }
         ellipse(this.pos.x, this.pos.y, this.size);
     }
     
@@ -54,13 +60,19 @@ class Star {
         }
     }
     
-    show(h) {
+    show(h, params = null, audioData = null) {
         let sx = map(this.x / this.z, 0, 1, 0, width);
         let sy = map(this.y / this.z, 0, 1, 0, height);
         let px = map(this.x / this.pz, 0, 1, 0, width);
         let py = map(this.y / this.pz, 0, 1, 0, height);
         this.pz = this.z;
-        stroke((h + this.z / 10) % 360, 150, 255);
+        if (params && audioData && typeof ColorPalettes !== 'undefined') {
+            let colorIndex = floor(this.z / 100) % 4;
+            let color = ColorPalettes.getColor(params.palette || 'neon', colorIndex, h + this.z / 10, audioData);
+            stroke(color.h, color.s * 0.6, color.b);
+        } else {
+            stroke((h + this.z / 10) % 360, 150, 255);
+        }
         strokeWeight(map(this.z, 0, width, 5, 0));
         line(px, py, sx, sy);
     }
@@ -86,7 +98,7 @@ class MatrixDrop {
         }
     }
     
-    show(h, bass) {
+    show(h, bass, params = null, audioData = null) {
         textSize(14);
         let flash = bass > 200;
         for (let i = 0; i < this.len; i++) {
@@ -98,7 +110,13 @@ class MatrixDrop {
                     if (flash && i < 3) {
                         fill(255);
                     } else {
-                        fill(h, 255, 255, map(i, 0, this.len, 255, 10));
+                        if (params && audioData && typeof ColorPalettes !== 'undefined') {
+                            let colorIndex = i % 4;
+                            let color = ColorPalettes.getColor(params.palette || 'neon', colorIndex, h, audioData);
+                            fill(color.h, color.s, color.b, map(i, 0, this.len, 255, 10));
+                        } else {
+                            fill(h, 255, 255, map(i, 0, this.len, 255, 10));
+                        }
                     }
                 }
                 text(this.chars[i], this.x, cy);

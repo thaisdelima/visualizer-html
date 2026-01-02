@@ -41,5 +41,16 @@ const Controls = {
         } else {
             c.classList.add('hidden');
         }
+    },
+    
+    changePalette(paletteName) {
+        if (typeof params !== 'undefined') {
+            params.palette = paletteName;
+            // Atualizar seletor no HTML
+            let select = document.getElementById('palette-select');
+            if (select) {
+                select.value = paletteName;
+            }
+        }
     }
 };

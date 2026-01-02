@@ -1,13 +1,21 @@
 // Cenas 2D usando p5.js
 
 const P5Scenes = {
+    // Helper para obter cor da paleta
+    getPaletteColor(params, audioData, index = 0, offset = 0) {
+        let paletteName = params.palette || 'neon';
+        let color = ColorPalettes.getColor(paletteName, index, params.hue + offset, audioData);
+        return color;
+    },
+    
     sceneSpectrum(params, audioData) {
         let spectrum = audioData.spectrum;
         if (!spectrum) return;
         
         noFill();
         let centerSize = map(audioData.bass, 0, 255, 50, 200);
-        stroke((params.hue + 180) % 360, 200, 255);
+        let centerColor = this.getPaletteColor(params, audioData, 1, 180);
+        stroke(centerColor.h, centerColor.s, centerColor.b);
         strokeWeight(2);
         ellipse(0, 0, centerSize, centerSize);
         
@@ -16,8 +24,9 @@ const P5Scenes = {
             let angle = map(i, 0, len, 0, 360) + frameCount * params.speed;
             let amp = spectrum[i];
             let r = map(amp, 0, 255, 100, windowHeight / 2 * params.sens);
-            let hue = (params.hue + map(i, 0, len, 0, 100) + audioData.bass) % 360;
-            stroke(hue, 200, 255);
+            let colorIndex = floor(map(i, 0, len, 0, 4));
+            let color = this.getPaletteColor(params, audioData, colorIndex, map(i, 0, len, 0, 100) + audioData.bass);
+            stroke(color.h, color.s, color.b);
             strokeWeight(map(audioData.mid, 0, 255, 1, 5));
             line(0, 0, r * cos(angle), r * sin(angle));
         }
@@ -36,7 +45,7 @@ const P5Scenes = {
         for (let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
             p.update(audioData.level, params.speed);
-            p.display(params.hue);
+            p.display(params.hue, params, audioData);
             if (p.isDead()) {
                 particles.splice(i, 1);
             }
@@ -52,8 +61,8 @@ const P5Scenes = {
             let size = (frameCount * params.speed * 2 + i * 50) % (max(width, height));
             let alpha = map(size, 0, max(width, height), 255, 0);
             push();
-            let hue = (params.hue + i * 10) % 360;
-            stroke(hue, 200, 255, alpha);
+            let color = this.getPaletteColor(params, audioData, i % 4, i * 10);
+            stroke(color.h, color.s, color.b, alpha);
             strokeWeight(map(audioData.bass, 0, 255, 1, 8));
             if (i % 2 === 0) {
                 rect(0, 0, size, size);
@@ -75,7 +84,9 @@ const P5Scenes = {
         
         for (let x = 0; x < width; x += gridSize) {
             if (random(1) < audioData.level * 0.2) {
-                fill((params.hue + random(60)) % 360, 200, 255, 200);
+                let colorIndex = floor(random(4));
+                let color = this.getPaletteColor(params, audioData, colorIndex, random(60));
+                fill(color.h, color.s, color.b, 200);
                 rect(x + gridSize / 2, random(height), gridSize, gridSize);
             }
         }
@@ -87,18 +98,89 @@ const P5Scenes = {
     sceneWaveform(params, audioData) {
         translate(-width / 2, 0);
         let waveform = audioData.waveform;
-        noFill();
-        strokeWeight(3);
         
-        for (let j = 0; j < 2; j++) {
+        // Camada de fundo com brilho suave
+        push();
+        noFill();
+        strokeWeight(8);
+        let bgColor = this.getPaletteColor(params, audioData, 1, 180);
+        stroke(bgColor.h, bgColor.s * 0.4, bgColor.b * 0.8, 30);
+        beginShape();
+        for (let i = 0; i < waveform.length; i += 5) {
+            let y = map(waveform[i], -1, 1, -height / 2, height / 2);
+            vertex(map(i, 0, waveform.length, 0, width), y);
+        }
+        endShape();
+        pop();
+        
+        // Múltiplas camadas de onda com diferentes opacidades e cores
+        for (let j = 0; j < 3; j++) {
+            push();
+            noFill();
+            
+            // Variação de espessura baseada na amplitude
+            let baseWeight = map(audioData.level, 0, 1, 2, 6);
+            strokeWeight(baseWeight - j * 0.8);
+            
+            // Cor da paleta baseada na camada
+            let color = this.getPaletteColor(params, audioData, j, j * 40 + audioData.bass * 0.5);
+            let alpha = map(j, 0, 2, 180, 255);
+            
+            stroke(color.h, color.s, color.b, alpha);
+            
             beginShape();
-            stroke((params.hue + j * 30) % 360, 200, 255);
-            for (let i = 0; i < waveform.length; i += 10) {
-                let y = map(waveform[i], -1, 1, -height / 2, height / 2) * (1 + j * 0.5);
+            for (let i = 0; i < waveform.length; i += 8) {
+                // Suavização adicional para movimento mais fluido
+                let smoothY = waveform[i];
+                if (i > 0 && i < waveform.length - 1) {
+                    smoothY = (waveform[i - 1] + waveform[i] + waveform[i + 1]) / 3;
+                }
+                
+                // Amplitude variável por camada
+                let amplitude = (1 + j * 0.3) * (1 + audioData.level * 0.5);
+                let y = map(smoothY, -1, 1, -height / 2, height / 2) * amplitude;
+                
+                // Adicionar pequena variação baseada na frequência
+                let freqOffset = sin(i * 0.1 + frameCount * 0.05) * 5 * audioData.level;
+                y += freqOffset;
+                
                 vertex(map(i, 0, waveform.length, 0, width), y);
             }
             endShape();
+            pop();
         }
+        
+        // Pontos brilhantes nos picos da onda
+        push();
+        noStroke();
+        for (let i = 0; i < waveform.length; i += 15) {
+            let amp = abs(waveform[i]);
+            if (amp > 0.3) {
+                let x = map(i, 0, waveform.length, 0, width);
+                let y = map(waveform[i], -1, 1, -height / 2, height / 2);
+                
+                // Brilho mais intenso nos picos
+                let glowSize = map(amp, 0.3, 1, 3, 12) * (1 + audioData.bass / 255);
+                let glowAlpha = map(amp, 0.3, 1, 100, 255);
+                
+                let glowColor = this.getPaletteColor(params, audioData, i % 4, i * 0.5);
+                fill(glowColor.h, glowColor.s, glowColor.b, glowAlpha);
+                ellipse(x, y, glowSize, glowSize);
+                
+                // Núcleo brilhante
+                fill(255, 255, 255, glowAlpha * 0.8);
+                ellipse(x, y, glowSize * 0.4, glowSize * 0.4);
+            }
+        }
+        pop();
+        
+        // Linha central de referência com brilho sutil
+        push();
+        let refColor = this.getPaletteColor(params, audioData, 2, 90);
+        stroke(refColor.h, refColor.s * 0.6, refColor.b * 0.8, 50);
+        strokeWeight(1);
+        line(0, 0, width, 0);
+        pop();
     },
     
     sceneMandala(params, audioData) {
@@ -112,7 +194,8 @@ const P5Scenes = {
             let len = 50;
             for (let j = 0; j < len; j += 5) {
                 let amp = audioData.spectrum[j * 2] || 0;
-                fill((params.hue + j * 2) % 360, 200, 255, 150);
+                let color = this.getPaletteColor(params, audioData, j % 4, j * 2);
+                fill(color.h, color.s, color.b, 150);
                 noStroke();
                 let r = map(amp, 0, 255, 10, 300);
                 ellipse(r, 0, map(amp, 0, 255, 2, 30));
@@ -124,7 +207,7 @@ const P5Scenes = {
     sceneMatrix(params, drops, audioData) {
         for (let d of drops) {
             d.fall(params.speed);
-            d.show(params.hue, audioData.bass);
+            d.show(params.hue, audioData.bass, params, audioData);
         }
     },
     
@@ -138,7 +221,9 @@ const P5Scenes = {
             for (let j = 0; j < rows; j++) {
                 let amp = audioData.spectrum[floor(map(i + j, 0, cols + rows, 0, 64))] || 0;
                 if (amp > 50) {
-                    fill((params.hue + amp) % 360, 200, 255, map(amp, 0, 255, 50, 255));
+                    let colorIndex = (i + j) % 4;
+                    let color = this.getPaletteColor(params, audioData, colorIndex, amp);
+                    fill(color.h, color.s, color.b, map(amp, 0, 255, 50, 255));
                     rect(i * res + res / 2, j * res + res / 2, res * 0.8);
                 }
             }
@@ -150,7 +235,7 @@ const P5Scenes = {
         translate(0, 0);
         for (let s of stars) {
             s.update(speed);
-            s.show(params.hue);
+            s.show(params.hue, params, audioData);
         }
     },
     
@@ -165,7 +250,9 @@ const P5Scenes = {
             let xoff = 0;
             for (let x = 0; x < cols; x++) {
                 let ang = noise(xoff, yoff, frameCount * 0.01) * 720;
-                fill((params.hue + ang / 2) % 360, 200, 255, 150);
+                let colorIndex = (x + y) % 4;
+                let color = this.getPaletteColor(params, audioData, colorIndex, ang / 2);
+                fill(color.h, color.s, color.b, 150);
                 push();
                 translate(x * res, y * res);
                 rotate(ang);

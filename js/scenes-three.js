@@ -98,9 +98,11 @@ const ThreeScenes = {
     drawThreeJS(currentScene, params, audioData) {
         if (!this.threeScene) return;
 
-        // Converter cor HSB do p5 para Hex do Three.js
-        let h = params.hue;
-        let color = new THREE.Color(`hsl(${h}, 100%, 50%)`);
+        // Obter cor da paleta atual
+        let paletteName = params.palette || 'neon';
+        let baseColor = ColorPalettes.getColor(paletteName, 0, params.hue, audioData);
+        let h = baseColor.h;
+        let color = new THREE.Color(`hsl(${h}, ${baseColor.s / 255 * 100}%, ${baseColor.b / 255 * 50}%)`);
 
         // Dados de Áudio
         let bass = audioData.bass;
@@ -127,10 +129,12 @@ const ThreeScenes = {
                 let val = spectrum ? spectrum[freqIdx] : 0;
                 
                 let scaleY = map(val, 0, 255, 0.1, 10) * params.sens;
-                cube.scale.y = lerp(cube.scale.y, scaleY, 0.1);
+                cube.scale.y = cube.scale.y + (scaleY - cube.scale.y) * 0.1;
                 cube.position.y = cube.scale.y / 2;
                 
-                cube.material.color.setHSL((h + val) / 360, 1.0, 0.5);
+                // Usar cor da paleta
+                let cubeColor = ColorPalettes.getColor(paletteName, i % 4, params.hue + val, audioData);
+                cube.material.color.setHSL(cubeColor.h / 360, cubeColor.s / 255, cubeColor.b / 255 * 0.5);
             });
         }
 
@@ -145,7 +149,9 @@ const ThreeScenes = {
                 this.threeObjects.tunnelParticles.rotation.z += 0.05;
             }
 
-            this.threeObjects.tunnelParticles.material.color.setHSL(h / 360, 1.0, 0.8);
+            // Usar cor da paleta para partículas
+            let particleColor = ColorPalettes.getColor(paletteName, 0, params.hue, audioData);
+            this.threeObjects.tunnelParticles.material.color.setHSL(particleColor.h / 360, particleColor.s / 255, particleColor.b / 255 * 0.8);
             
             let speedZ = map(bass, 0, 255, 0.5, 5) * params.speed;
             this.threeCamera.position.z -= speedZ;
@@ -179,7 +185,9 @@ const ThreeScenes = {
             this.threeObjects.sphereWire.rotation.y += 0.01 * params.speed;
             this.threeObjects.sphereWire.rotation.z += 0.005;
 
-            this.threeObjects.sphereWire.material.color.setHSL(h / 360, 1.0, 0.5);
+            // Usar cor da paleta para esfera
+            let sphereColor = ColorPalettes.getColor(paletteName, 0, params.hue, audioData);
+            this.threeObjects.sphereWire.material.color.setHSL(sphereColor.h / 360, sphereColor.s / 255, sphereColor.b / 255 * 0.5);
             
             if (treble > 150) {
                 this.threeObjects.sphereWire.material.wireframeLinewidth = 2;
