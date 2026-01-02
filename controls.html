@@ -90,7 +90,7 @@
             <!-- Cenas 3D (Three.js) -->
             <div>
                 <h4 class="text-gray-400 text-xs mb-2 uppercase tracking-wider">3D (Three.js)</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     <button onclick="changeScene(11)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-11">
                         <span>City</span> <span class="text-gray-500 text-[10px] mt-1">[Q]</span>
                     </button>
@@ -99,6 +99,9 @@
                     </button>
                     <button onclick="changeScene(13)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-13">
                         <span>Planet</span> <span class="text-gray-500 text-[10px] mt-1">[E]</span>
+                    </button>
+                    <button onclick="changeScene(14)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-14">
+                        <span>Falling Balls</span> <span class="text-gray-500 text-[10px] mt-1">[R]</span>
                     </button>
                 </div>
             </div>
@@ -139,15 +142,28 @@
             </div>
             
             <!-- Visualizador de Níveis -->
-            <div class="flex gap-1 h-8 mt-2">
-                <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
-                    <div id="bar-bass" class="bg-red-500 w-full opacity-80" style="height: 0%"></div>
+            <div class="mt-2">
+                <div class="flex gap-1 h-8 mb-1">
+                    <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
+                        <div id="bar-bass" class="bg-red-500 w-full opacity-80" style="height: 0%"></div>
+                    </div>
+                    <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
+                        <div id="bar-mid" class="bg-yellow-500 w-full opacity-80" style="height: 0%"></div>
+                    </div>
+                    <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
+                        <div id="bar-treble" class="bg-blue-500 w-full opacity-80" style="height: 0%"></div>
+                    </div>
                 </div>
-                <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
-                    <div id="bar-mid" class="bg-yellow-500 w-full opacity-80" style="height: 0%"></div>
-                </div>
-                <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
-                    <div id="bar-treble" class="bg-blue-500 w-full opacity-80" style="height: 0%"></div>
+                <div class="flex gap-1 text-xs text-gray-400">
+                    <div class="flex-1 text-center">
+                        <span class="text-red-400">Bass: </span><span id="val-bass">0</span>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <span class="text-yellow-400">Mid: </span><span id="val-mid">0</span>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <span class="text-blue-400">Treble: </span><span id="val-treble">0</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -232,8 +248,8 @@
                     btn.className = `p-2 border rounded transition text-center ${i === currentScene ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
                 }
             }
-            // Cenas 3D (11-13)
-            for (let i = 11; i <= 13; i++) {
+            // Cenas 3D (11-14)
+            for (let i = 11; i <= 14; i++) {
                 let btn = document.getElementById(`btn-scene-${i}`);
                 if (btn) {
                     let activeClass = 'bg-orange-900 border-orange-500';
@@ -271,14 +287,20 @@
                     if (barBass && audioData.bass !== undefined) {
                         let height = map(audioData.bass, 0, 255, 0, 100);
                         barBass.style.height = height + '%';
+                        let valBass = document.getElementById('val-bass');
+                        if (valBass) valBass.innerText = Math.round(audioData.bass);
                     }
                     if (barMid && audioData.mid !== undefined) {
                         let height = map(audioData.mid, 0, 255, 0, 100);
                         barMid.style.height = height + '%';
+                        let valMid = document.getElementById('val-mid');
+                        if (valMid) valMid.innerText = Math.round(audioData.mid);
                     }
                     if (barTreble && audioData.treble !== undefined) {
                         let height = map(audioData.treble, 0, 255, 0, 100);
                         barTreble.style.height = height + '%';
+                        let valTreble = document.getElementById('val-treble');
+                        if (valTreble) valTreble.innerText = Math.round(audioData.treble);
                     }
                 }
             }

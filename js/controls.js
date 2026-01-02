@@ -16,8 +16,8 @@ const Controls = {
                         btn.className = `p-2 border rounded transition text-center ${i === n ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
                     }
                 }
-                // Cenas 3D (11-13)
-                for (let i = 11; i <= 13; i++) {
+                // Cenas 3D (11-14)
+                for (let i = 11; i <= 14; i++) {
                     let btn = this.controlsWindow.document.getElementById(`btn-scene-${i}`);
                     if (btn) {
                         let activeClass = 'bg-orange-900 border-orange-500';
@@ -62,6 +62,15 @@ const Controls = {
         if (barMid) barMid.style.height = map(audioData.mid, 0, 255, 0, 100) + '%';
         if (barTreble) barTreble.style.height = map(audioData.treble, 0, 255, 0, 100) + '%';
         
+        // Atualizar valores numéricos na janela principal
+        let valBass = document.getElementById('val-bass');
+        let valMid = document.getElementById('val-mid');
+        let valTreble = document.getElementById('val-treble');
+        
+        if (valBass) valBass.innerText = Math.round(audioData.bass);
+        if (valMid) valMid.innerText = Math.round(audioData.mid);
+        if (valTreble) valTreble.innerText = Math.round(audioData.treble);
+        
         // Atualizar na janela popup se estiver aberta
         if (this.controlsWindow && !this.controlsWindow.closed) {
             try {
@@ -72,6 +81,15 @@ const Controls = {
                 if (popupBarBass) popupBarBass.style.height = map(audioData.bass, 0, 255, 0, 100) + '%';
                 if (popupBarMid) popupBarMid.style.height = map(audioData.mid, 0, 255, 0, 100) + '%';
                 if (popupBarTreble) popupBarTreble.style.height = map(audioData.treble, 0, 255, 0, 100) + '%';
+                
+                // Atualizar valores numéricos na janela popup
+                let popupValBass = this.controlsWindow.document.getElementById('val-bass');
+                let popupValMid = this.controlsWindow.document.getElementById('val-mid');
+                let popupValTreble = this.controlsWindow.document.getElementById('val-treble');
+                
+                if (popupValBass) popupValBass.innerText = Math.round(audioData.bass);
+                if (popupValMid) popupValMid.innerText = Math.round(audioData.mid);
+                if (popupValTreble) popupValTreble.innerText = Math.round(audioData.treble);
             } catch (e) {
                 // Ignorar erros de cross-origin se houver
             }
@@ -79,12 +97,32 @@ const Controls = {
     },
     
     controlsWindow: null,
+    checkInterval: null,
+    
+    updateButtonVisibility() {
+        let openBtn = document.getElementById('open-controls-btn');
+        if (openBtn) {
+            if (this.controlsWindow && !this.controlsWindow.closed) {
+                // Esconder botão quando janela está aberta
+                openBtn.style.display = 'none';
+            } else {
+                // Mostrar botão quando janela está fechada
+                openBtn.style.display = 'flex';
+            }
+        }
+    },
     
     toggleControls() {
         // Se a janela já existe e está aberta, fechar
         if (this.controlsWindow && !this.controlsWindow.closed) {
             this.controlsWindow.close();
             this.controlsWindow = null;
+            this.updateButtonVisibility();
+            // Parar verificação periódica
+            if (this.checkInterval) {
+                clearInterval(this.checkInterval);
+                this.checkInterval = null;
+            }
             return;
         }
         
@@ -103,6 +141,20 @@ const Controls = {
         // Focar na nova janela
         if (this.controlsWindow) {
             this.controlsWindow.focus();
+            this.updateButtonVisibility();
+            
+            // Verificar periodicamente se a janela foi fechada manualmente
+            if (this.checkInterval) {
+                clearInterval(this.checkInterval);
+            }
+            this.checkInterval = setInterval(() => {
+                if (this.controlsWindow && this.controlsWindow.closed) {
+                    this.controlsWindow = null;
+                    this.updateButtonVisibility();
+                    clearInterval(this.checkInterval);
+                    this.checkInterval = null;
+                }
+            }, 500);
         }
     },
     

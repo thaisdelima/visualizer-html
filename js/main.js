@@ -52,6 +52,11 @@ window.toggleControls = () => {
     }
 };
 
+// Expor AudioManager globalmente
+if (typeof AudioManager !== 'undefined') {
+    window.AudioManager = AudioManager;
+}
+
 // Expor MediaManager globalmente
 if (typeof MediaManager !== 'undefined') {
     window.MediaManager = MediaManager;
@@ -88,6 +93,19 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupControlButtons);
 } else {
     setupControlButtons();
+}
+
+// Inicializar visibilidade do botão de controles
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof Controls !== 'undefined') {
+            Controls.updateButtonVisibility();
+        }
+    });
+} else {
+    if (typeof Controls !== 'undefined') {
+        Controls.updateButtonVisibility();
+    }
 }
 
 // --- Configuração p5.js ---
@@ -145,8 +163,8 @@ function draw() {
     }
 
     // Controle de Renderização
-    if (currentScene > 10 && currentScene <= 13) {
-        // MODO 3D: Three.js (cenas 11-13)
+    if (currentScene > 10 && currentScene <= 14) {
+        // MODO 3D: Three.js (cenas 11-14)
         if (typeof ThreeScenes === 'undefined' || !ThreeScenes.getThreeRenderer) {
             console.error('ThreeScenes não está disponível');
             return;
@@ -231,6 +249,7 @@ function keyPressed() {
     if (key === 'q' || key === 'Q') currentScene = Controls.changeScene(11, currentScene);
     if (key === 'w' || key === 'W') currentScene = Controls.changeScene(12, currentScene);
     if (key === 'e' || key === 'E') currentScene = Controls.changeScene(13, currentScene);
+    if (key === 'r' || key === 'R') currentScene = Controls.changeScene(14, currentScene);
     
     if (key === ' ') Controls.triggerStrobe(params, true);
     if (key === 'h' || key === 'H') Controls.toggleControls();

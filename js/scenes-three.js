@@ -7,11 +7,13 @@ const ThreeScenes = {
     threeGroup1: null,
     threeGroup2: null,
     threeGroup3: null,
+    threeGroup4: null,
     threeObjects: {
         cubes: [],
         tunnelParticles: null,
         sphere: null,
-        sphereWire: null
+        sphereWire: null,
+        fallingBalls: []
     },
     
     initThreeJS() {
@@ -93,6 +95,63 @@ const ThreeScenes = {
 
         this.threeGroup3.visible = false;
         this.threeScene.add(this.threeGroup3);
+
+        // --- Cena 14: Falling Balls (Bolas Caindo) ---
+        this.threeGroup4 = new THREE.Group();
+        
+        // Luzes para as bolas
+        let ballLight1 = new THREE.PointLight(0xffffff, 1, 200);
+        ballLight1.position.set(0, 50, 0);
+        this.threeGroup4.add(ballLight1);
+        let ballAmbLight = new THREE.AmbientLight(0x404040);
+        this.threeGroup4.add(ballAmbLight);
+        
+        // Inicializar algumas bolas
+        this.threeObjects.fallingBalls = [];
+        for (let i = 0; i < 20; i++) {
+            this._createFallingBall();
+        }
+        
+        this.threeGroup4.visible = false;
+        this.threeScene.add(this.threeGroup4);
+    },
+    
+    _createFallingBall() {
+        let radius = Math.random() * 1.5 + 0.5;
+        let geometry = new THREE.SphereGeometry(radius, 16, 16);
+        let material = new THREE.MeshPhongMaterial({ 
+            color: 0x00ffff,
+            shininess: 100,
+            transparent: true,
+            opacity: 0.9
+        });
+        let ball = new THREE.Mesh(geometry, material);
+        
+        // Posição inicial aleatória no topo
+        ball.position.set(
+            (Math.random() - 0.5) * 40,
+            30 + Math.random() * 20,
+            (Math.random() - 0.5) * 40
+        );
+        
+        // Velocidade inicial e física
+        ball.userData = {
+            velocityY: -(Math.random() * 0.5 + 0.5), // Velocidade vertical (negativa = para baixo)
+            velocityX: (Math.random() - 0.5) * 0.3, // Velocidade horizontal X
+            velocityZ: (Math.random() - 0.5) * 0.3, // Velocidade horizontal Z
+            rotationSpeed: {
+                x: (Math.random() - 0.5) * 0.02,
+                y: (Math.random() - 0.5) * 0.02,
+                z: (Math.random() - 0.5) * 0.02
+            },
+            radius: radius,
+            colorIndex: Math.floor(Math.random() * 4),
+            bounceCount: 0, // Contador de quiques
+            energy: 1.0 // Energia da bola (diminui a cada quique)
+        };
+        
+        this.threeGroup4.add(ball);
+        this.threeObjects.fallingBalls.push(ball);
     },
     
     drawThreeJS(currentScene, params, audioData) {
@@ -119,6 +178,7 @@ const ThreeScenes = {
             this.threeGroup1.visible = true;
             this.threeGroup2.visible = false;
             this.threeGroup3.visible = false;
+            this.threeGroup4.visible = false;
             
             this.threeCamera.position.x = Math.sin(time * 0.5) * 40;
             this.threeCamera.position.z = Math.cos(time * 0.5) * 40;
@@ -150,6 +210,7 @@ const ThreeScenes = {
             this.threeGroup1.visible = false;
             this.threeGroup2.visible = true;
             this.threeGroup3.visible = false;
+            this.threeGroup4.visible = false;
             
             this.threeObjects.tunnelParticles.rotation.z += 0.005 * params.speed;
             if (bass > 180) {
@@ -184,6 +245,7 @@ const ThreeScenes = {
             this.threeGroup1.visible = false;
             this.threeGroup2.visible = false;
             this.threeGroup3.visible = true;
+            this.threeGroup4.visible = false;
 
             this.threeCamera.position.set(0, 0, 40);
             this.threeCamera.lookAt(0, 0, 0);
@@ -206,6 +268,121 @@ const ThreeScenes = {
                 this.threeObjects.sphereWire.material.wireframeLinewidth = 2;
             } else {
                 this.threeObjects.sphereWire.material.wireframeLinewidth = 1;
+            }
+        }
+
+        // --- Cena 14: Falling Balls (Bolas Caindo) ---
+        if (currentScene === 14) {
+            this.threeGroup1.visible = false;
+            this.threeGroup2.visible = false;
+            this.threeGroup3.visible = false;
+            this.threeGroup4.visible = true;
+
+            // Posição da câmera - vista de cima para baixo
+            this.threeCamera.position.set(0, 20, 50);
+            this.threeCamera.lookAt(0, 0, 0);
+
+            // Gravidade e velocidade baseada no bass
+            let gravity = map(bass, 0, 255, 0.2, 0.8) * params.speed;
+            let floorLevel = -20; // Nível do chão
+            
+            // Criar novas bolas quando o bass está alto
+            let bassThreshold = 150;
+            if (bass > bassThreshold) {
+                let spawnChance = map(bass, bassThreshold, 255, 0.1, 0.5);
+                if (Math.random() < spawnChance) {
+                    this._createFallingBall();
+                }
+            }
+
+            // Atualizar bolas existentes
+            let ballsToRemove = [];
+            this.threeObjects.fallingBalls.forEach((ball, index) => {
+                // Aplicar gravidade
+                ball.userData.velocityY -= gravity;
+                
+                // Atualizar posição
+                ball.position.y += ball.userData.velocityY * params.speed;
+                ball.position.x += ball.userData.velocityX * params.speed;
+                ball.position.z += ball.userData.velocityZ * params.speed;
+                
+                // Detectar colisão com o chão
+                if (ball.position.y <= floorLevel + ball.userData.radius) {
+                    // Quicar!
+                    ball.userData.velocityY = Math.abs(ball.userData.velocityY) * 0.7; // Inverter e amortecer
+                    ball.position.y = floorLevel + ball.userData.radius; // Corrigir posição
+                    ball.userData.bounceCount++;
+                    ball.userData.energy *= 0.7; // Perder energia a cada quique
+                    
+                    // Adicionar um pouco de movimento horizontal aleatório no quique
+                    if (ball.userData.bounceCount < 3) {
+                        ball.userData.velocityX += (Math.random() - 0.5) * 0.2;
+                        ball.userData.velocityZ += (Math.random() - 0.5) * 0.2;
+                    }
+                }
+                
+                // Rotação baseada no áudio e velocidade
+                let rotationMultiplier = 1 + (bass / 255) * 2 + Math.abs(ball.userData.velocityY) * 0.5;
+                ball.rotation.x += ball.userData.rotationSpeed.x * rotationMultiplier * params.speed;
+                ball.rotation.y += ball.userData.rotationSpeed.y * rotationMultiplier * params.speed;
+                ball.rotation.z += ball.userData.rotationSpeed.z * rotationMultiplier * params.speed;
+                
+                // Escala baseada no bass (pulsação)
+                let scale = 1 + map(bass, 0, 255, 0, 0.3) * params.sens;
+                ball.scale.setScalar(scale);
+                
+                // Cor reativa ao áudio
+                let ballColor = ColorPalettes.getColor(
+                    paletteName, 
+                    ball.userData.colorIndex, 
+                    params.hue + bass * 0.5, 
+                    audioData
+                );
+                let ballH = (ballColor.h % 360) / 360;
+                let ballS = Math.max(0, Math.min(1, ballColor.s / 255));
+                let ballL = Math.max(0, Math.min(1, ballColor.b / 255));
+                ball.material.color.setHSL(ballH, ballS, ballL);
+                
+                // Opacidade diminui com a energia (bolas que quicaram muito ficam mais transparentes)
+                ball.material.opacity = 0.5 + ball.userData.energy * 0.4;
+                
+                // Efeito de brilho quando o bass está alto
+                if (bass > 200) {
+                    ball.material.emissive = ball.material.color.clone();
+                    ball.material.emissiveIntensity = 0.5;
+                } else {
+                    ball.material.emissive = new THREE.Color(0x000000);
+                    ball.material.emissiveIntensity = 0;
+                }
+                
+                // Remover bolas que saíram de vista ou perderam muita energia
+                let maxDistance = 60;
+                let minVelocity = 0.15; // Velocidade mínima para continuar
+                if (Math.abs(ball.position.x) > maxDistance || 
+                    Math.abs(ball.position.z) > maxDistance || 
+                    ball.position.y < -50 ||
+                    ball.userData.energy < 0.1 ||
+                    (ball.position.y < floorLevel + 10 && Math.abs(ball.userData.velocityY) < minVelocity && ball.userData.bounceCount > 3)) {
+                    ballsToRemove.push(index);
+                }
+            });
+
+            // Remover bolas que saíram da tela
+            ballsToRemove.reverse().forEach(index => {
+                let ball = this.threeObjects.fallingBalls[index];
+                this.threeGroup4.remove(ball);
+                ball.geometry.dispose();
+                ball.material.dispose();
+                this.threeObjects.fallingBalls.splice(index, 1);
+            });
+
+            // Limitar número máximo de bolas (performance)
+            const maxBalls = 100;
+            while (this.threeObjects.fallingBalls.length > maxBalls) {
+                let ball = this.threeObjects.fallingBalls.shift();
+                this.threeGroup4.remove(ball);
+                ball.geometry.dispose();
+                ball.material.dispose();
             }
         }
 

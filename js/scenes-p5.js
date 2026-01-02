@@ -12,23 +12,73 @@ const P5Scenes = {
         let spectrum = audioData.spectrum;
         if (!spectrum) return;
         
-        noFill();
-        let centerSize = map(audioData.bass, 0, 255, 50, 200);
-        let centerColor = this.getPaletteColor(params, audioData, 1, 180);
-        stroke(centerColor.h, centerColor.s, centerColor.b);
-        strokeWeight(2);
-        ellipse(0, 0, centerSize, centerSize);
+        // Calcular tamanho base usando nível geral e sensibilidade
+        let baseSize = min(windowWidth, windowHeight) * 0.3 * params.sens;
+        let maxRadius = baseSize * 1.5;
         
+        // Espectro: dividir em regiões (bass, mid, treble) para equilíbrio
         let len = spectrum.length / 2;
-        for (let i = 0; i < len; i += 10) {
-            let angle = map(i, 0, len, 0, 360) + frameCount * params.speed;
+        let bassEnd = floor(len * 0.3);  // Primeiros 30% = bass
+        let midEnd = floor(len * 0.7);    // 30-70% = mid
+        // 70-100% = treble
+        
+        // Desenhar linhas do espectro com mais detalhes
+        for (let i = 0; i < len; i += 5) {
             let amp = spectrum[i];
-            let r = map(amp, 0, 255, 100, windowHeight / 2 * params.sens);
-            let colorIndex = floor(map(i, 0, len, 0, 4));
-            let color = this.getPaletteColor(params, audioData, colorIndex, map(i, 0, len, 0, 100) + audioData.bass);
-            stroke(color.h, color.s, color.b);
-            strokeWeight(map(audioData.mid, 0, 255, 1, 5));
+            let normalizedAmp = amp / 255;
+            
+            // Determinar região e usar frequência correspondente
+            let regionMultiplier = 1.0;
+            let regionColorIndex = 0;
+            let regionHueOffset = 0;
+            
+            if (i < bassEnd) {
+                // Região bass: usar audioData.bass para intensidade
+                regionMultiplier = map(audioData.bass, 0, 255, 0.6, 1.2);
+                regionColorIndex = 0;
+                regionHueOffset = audioData.bass * 0.5;
+            } else if (i < midEnd) {
+                // Região mid: usar audioData.mid para intensidade
+                regionMultiplier = map(audioData.mid, 0, 255, 0.7, 1.3);
+                regionColorIndex = 1;
+                regionHueOffset = audioData.mid * 0.5;
+            } else {
+                // Região treble: usar audioData.treble para intensidade
+                regionMultiplier = map(audioData.treble, 0, 255, 0.8, 1.4);
+                regionColorIndex = 2;
+                regionHueOffset = audioData.treble * 0.5;
+            }
+            
+            // Calcular raio baseado na amplitude e sensibilidade
+            let baseRadius = map(normalizedAmp, 0, 1, baseSize * 0.5, maxRadius);
+            let r = baseRadius * regionMultiplier * params.sens;
+            r = constrain(r, baseSize * 0.3, maxRadius);
+            
+            // Ângulo com rotação suave
+            let angle = map(i, 0, len, 0, 360) + frameCount * params.speed * 0.5;
+            
+            // Cor baseada na região e posição no espectro
+            let color = this.getPaletteColor(
+                params, 
+                audioData, 
+                regionColorIndex, 
+                map(i, 0, len, 0, 120) + regionHueOffset + frameCount * 0.2
+            );
+            
+            // Espessura da linha baseada na amplitude e frequência
+            let strokeW = map(normalizedAmp, 0, 1, 0.5, 3) * map(regionMultiplier, 0.6, 1.4, 0.8, 1.2);
+            stroke(color.h, color.s, color.b, map(normalizedAmp, 0, 1, 100, 255));
+            strokeWeight(strokeW);
+            
+            // Desenhar linha do centro para o ponto no espectro
             line(0, 0, r * cos(angle), r * sin(angle));
+            
+            // Adicionar ponto no final da linha para mais interatividade
+            if (normalizedAmp > 0.3) {
+                noStroke();
+                fill(color.h, color.s, color.b, map(normalizedAmp, 0.3, 1, 150, 255));
+                ellipse(r * cos(angle), r * sin(angle), strokeW * 2, strokeW * 2);
+            }
         }
     },
     
