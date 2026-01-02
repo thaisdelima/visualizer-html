@@ -12,8 +12,9 @@ const P5Scenes = {
         let spectrum = audioData.spectrum;
         if (!spectrum) return;
         
-        // Calcular tamanho base usando nível geral e sensibilidade
-        let baseSize = min(windowWidth, windowHeight) * 0.3 * params.sens;
+        // Calcular tamanho base usando nível geral e sensibilidade (média dos três)
+        let avgSens = (params.sensBass + params.sensMid + params.sensTreble) / 3;
+        let baseSize = min(windowWidth, windowHeight) * 0.3 * avgSens;
         let maxRadius = baseSize * 1.5;
         
         // Espectro: dividir em regiões (bass, mid, treble) para equilíbrio
@@ -49,9 +50,10 @@ const P5Scenes = {
                 regionHueOffset = audioData.treble * 0.5;
             }
             
-            // Calcular raio baseado na amplitude e sensibilidade
+            // Calcular raio baseado na amplitude e sensibilidade (usar sensibilidade específica da região)
             let baseRadius = map(normalizedAmp, 0, 1, baseSize * 0.5, maxRadius);
-            let r = baseRadius * regionMultiplier * params.sens;
+            let regionSens = i < bassEnd ? params.sensBass : (i < midEnd ? params.sensMid : params.sensTreble);
+            let r = baseRadius * regionMultiplier * regionSens;
             r = constrain(r, baseSize * 0.3, maxRadius);
             
             // Ângulo com rotação suave
@@ -296,7 +298,7 @@ const P5Scenes = {
         noStroke();
         
         // Calcular zoom baseado no áudio (pulse ao ritmo da música)
-        let bassPulse = map(audioData.bass, 0, 255, 0.8, 1.4) * params.sens;
+        let bassPulse = map(audioData.bass, 0, 255, 0.8, 1.4) * params.sensBass;
         let levelPulse = map(audioData.level, 0, 1, 0.9, 1.2);
         let pulseScale = bassPulse * levelPulse;
         
@@ -411,7 +413,7 @@ const P5Scenes = {
         let img = MediaManager.currentImage;
         
         // Pixelização reativa ao ritmo da música
-        let basePixelSize = map(audioData.bass, 0, 255, 4, 20) * params.sens;
+        let basePixelSize = map(audioData.bass, 0, 255, 4, 20) * params.sensBass;
         let levelPulse = map(audioData.level, 0, 1, 0.85, 1.15);
         let midVariation = sin(frameCount * 0.1 + audioData.mid * 0.01) * 2;
         let pixelSize = basePixelSize * levelPulse + midVariation;
@@ -628,7 +630,7 @@ const P5Scenes = {
         let offsetY = -scaledHeight / 2;
         
         // Efeitos baseados no áudio
-        let bassScale = map(audioData.bass, 0, 255, 0.95, 1.15) * params.sens;
+        let bassScale = map(audioData.bass, 0, 255, 0.95, 1.15) * params.sensBass;
         let rotation = sin(frameCount * 0.02 * params.speed) * map(audioData.mid, 0, 255, 0, 10);
         let pulse = map(audioData.level, 0, 1, 0.9, 1.1);
         
@@ -665,7 +667,7 @@ const P5Scenes = {
                 // Brilho pulsante
                 let colorIndex = i % 4;
                 let color = this.getPaletteColor(params, audioData, colorIndex, params.hue + i * 30);
-                let glowSize = map(audioData.bass, 180, 255, 50, 200) * params.sens;
+                let glowSize = map(audioData.bass, 180, 255, 50, 200) * params.sensBass;
                 let alpha = map(audioData.bass, 180, 255, 50, 150);
                 
                 fill(color.h, color.s, color.b, alpha);

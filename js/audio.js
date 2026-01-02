@@ -139,10 +139,12 @@ const AudioManager = {
         let rawMid = this.fft.getEnergy("mid");
         let rawTreble = this.fft.getEnergy("treble");
         
-        this.audioData.bass = min(255, rawBass * params.sens);
-        this.audioData.mid = min(255, rawMid * params.sens);
-        this.audioData.treble = min(255, rawTreble * params.sens);
-        this.audioData.level = this.mic.getLevel() * params.sens * 2;
+        this.audioData.bass = min(255, rawBass * params.sensBass);
+        this.audioData.mid = min(255, rawMid * params.sensMid);
+        this.audioData.treble = min(255, rawTreble * params.sensTreble);
+        // Usar média dos três para o nível geral
+        let avgSens = (params.sensBass + params.sensMid + params.sensTreble) / 3;
+        this.audioData.level = this.mic.getLevel() * avgSens * 2;
     },
     
     getAudioStarted() {

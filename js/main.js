@@ -4,7 +4,9 @@
 let p5Canvas;
 let currentScene = 1;
 let params = {
-    sens: 1.5,
+    sensBass: 1.5,
+    sensMid: 1.5,
+    sensTreble: 1.5,
     smooth: 0.8,
     speed: 1.0,
     hue: 0,
@@ -51,6 +53,17 @@ window.toggleControls = () => {
         Controls.toggleControls();
     }
 };
+window.toggleEffect = (effectName) => {
+    if (typeof EffectsManager !== 'undefined') {
+        return EffectsManager.toggleEffect(effectName);
+    }
+    return false;
+};
+window.updateEffectParam = (effectName, paramName, value) => {
+    if (typeof EffectsManager !== 'undefined') {
+        EffectsManager.updateEffectParam(effectName, paramName, parseFloat(value));
+    }
+};
 
 // Expor AudioManager globalmente
 if (typeof AudioManager !== 'undefined') {
@@ -70,6 +83,11 @@ if (typeof MediaManager !== 'undefined') {
             });
         }, 2000);
     }
+}
+
+// Expor EffectsManager globalmente
+if (typeof EffectsManager !== 'undefined') {
+    window.EffectsManager = EffectsManager;
 }
 
 // Configurar event listeners (funciona mesmo se o DOM já estiver carregado)
@@ -163,7 +181,7 @@ function draw() {
     }
 
     // Controle de Renderização
-    if (currentScene > 10 && currentScene <= 14) {
+    if (currentScene > 10 && currentScene <= 14 || currentScene === 21) {
         // MODO 3D: Three.js (cenas 11-14)
         if (typeof ThreeScenes === 'undefined' || !ThreeScenes.getThreeRenderer) {
             console.error('ThreeScenes não está disponível');
@@ -199,7 +217,49 @@ function draw() {
             translate(width / 2, height / 2);
         }
 
-        switch (currentScene) {
+        // Aplicar efeitos pré-renderização
+        if (typeof EffectsManager !== 'undefined') {
+            EffectsManager.applyPreEffects(params, AudioManager.audioData);
+        }
+        
+        // Aplicar caleidoscópio se ativo (simplificado - apenas rotação e espelhamento)
+        if (typeof EffectsManager !== 'undefined' && EffectsManager.activeEffects.kaleidoscope) {
+            let segments = EffectsManager.effectParams.kaleidoscope.segments;
+            let angleStep = 360 / segments;
+            
+            // Renderizar segmentos espelhados
+            for (let i = 0; i < segments; i++) {
+                push();
+                rotate(i * angleStep);
+                
+                // Espelhar segmentos alternados para efeito caleidoscópio
+                if (i % 2 === 1) {
+                    scale(1, -1);
+                }
+                
+                // Renderizar cena
+                switch (currentScene) {
+                    case 1: P5Scenes.sceneSpectrum(params, AudioManager.audioData); break;
+                    case 2: P5Scenes.sceneParticles(params, particles, AudioManager.audioData); break;
+                    case 3: P5Scenes.sceneTunnel(params, AudioManager.audioData); break;
+                    case 4: P5Scenes.sceneGlitch(params, AudioManager.audioData); break;
+                    case 5: P5Scenes.sceneWaveform(params, AudioManager.audioData); break;
+                    case 6: P5Scenes.sceneMandala(params, AudioManager.audioData); break;
+                    case 7: P5Scenes.sceneMatrix(params, drops, AudioManager.audioData); break;
+                    case 8: P5Scenes.scenePixels(params, AudioManager.audioData); break;
+                    case 9: P5Scenes.sceneStarfield(params, stars, AudioManager.audioData); break;
+                    case 10: P5Scenes.sceneFlow(params, AudioManager.audioData); break;
+                    case 15: P5Scenes.sceneColorParticles(params, particles, AudioManager.audioData); break;
+                    case 17: P5Scenes.scenePixelArt(params, AudioManager.audioData); break;
+                    case 18: P5Scenes.sceneReactiveContours(params, AudioManager.audioData); break;
+                    case 19: P5Scenes.sceneReactiveShapes(params, AudioManager.audioData); break;
+                    case 20: P5Scenes.sceneShapeParticles(params, particles, AudioManager.audioData); break;
+                }
+                pop();
+            }
+        } else {
+            // Renderização normal sem caleidoscópio
+            switch (currentScene) {
             case 1: P5Scenes.sceneSpectrum(params, AudioManager.audioData); break;
             case 2: P5Scenes.sceneParticles(params, particles, AudioManager.audioData); break;
             case 3: P5Scenes.sceneTunnel(params, AudioManager.audioData); break;
@@ -215,8 +275,15 @@ function draw() {
             case 18: P5Scenes.sceneReactiveContours(params, AudioManager.audioData); break;
             case 19: P5Scenes.sceneReactiveShapes(params, AudioManager.audioData); break;
             case 20: P5Scenes.sceneShapeParticles(params, particles, AudioManager.audioData); break;
+            }
         }
+        
         pop();
+        
+        // Aplicar efeitos pós-renderização (após pop para aplicar na tela toda)
+        if (typeof EffectsManager !== 'undefined') {
+            EffectsManager.applyPostEffects(params, AudioManager.audioData);
+        }
     }
 
     // FPS
@@ -250,6 +317,7 @@ function keyPressed() {
     if (key === 'w' || key === 'W') currentScene = Controls.changeScene(12, currentScene);
     if (key === 'e' || key === 'E') currentScene = Controls.changeScene(13, currentScene);
     if (key === 'r' || key === 'R') currentScene = Controls.changeScene(14, currentScene);
+    if (key === 't' || key === 'T') currentScene = Controls.changeScene(21, currentScene);
     
     if (key === ' ') Controls.triggerStrobe(params, true);
     if (key === 'h' || key === 'H') Controls.toggleControls();

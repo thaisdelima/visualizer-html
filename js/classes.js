@@ -224,12 +224,12 @@ class ShapeParticle {
         
         // Valores padrão se não existirem
         let speed = (params && typeof params.speed === 'number' && isFinite(params.speed)) ? params.speed : 1.0;
-        let sens = (params && typeof params.sens === 'number' && isFinite(params.sens)) ? params.sens : 1.0;
+        let sensBass = (params && typeof params.sensBass === 'number' && isFinite(params.sensBass)) ? params.sensBass : 1.0;
         let level = (audioData && typeof audioData.level === 'number' && isFinite(audioData.level)) ? audioData.level : 0.5;
         let bass = (audioData && typeof audioData.bass === 'number' && isFinite(audioData.bass)) ? audioData.bass : 0;
         
         // Movimento baseado no áudio
-        let bassForce = map(bass, 0, 255, 0, 5) * sens;
+        let bassForce = map(bass, 0, 255, 0, 5) * sensBass;
         
         // Adicionar força baseada no áudio
         if (this.vel && typeof this.vel.add === 'function') {
