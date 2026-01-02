@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controles - Neon VJ Studio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        body {
+            background-color: #000;
+            color: white;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+            <h2 class="text-cyan-400 font-bold text-xl">CONTROLES</h2>
+            <div class="flex items-center gap-4">
+                <div id="fps-counter" class="text-gray-400">FPS: 00</div>
+                <button onclick="window.close()" class="text-gray-400 hover:text-white transition-colors p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Cenas p5.js -->
+        <div class="mb-5">
+            <h3 class="text-purple-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas 2D (p5.js)</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 max-h-40 overflow-y-auto pr-2">
+                <button onclick="changeScene(1)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-1">1. Espectro</button>
+                <button onclick="changeScene(2)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-2">2. Partículas</button>
+                <button onclick="changeScene(3)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-3">3. Túnel</button>
+                <button onclick="changeScene(4)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-4">4. Glitch</button>
+                <button onclick="changeScene(5)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-5">5. Onda</button>
+                <button onclick="changeScene(6)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-6">6. Mandala</button>
+                <button onclick="changeScene(7)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-7">7. Matrix</button>
+                <button onclick="changeScene(8)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-8">8. Pixels</button>
+                <button onclick="changeScene(9)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-9">9. Estrelas</button>
+                <button onclick="changeScene(10)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-10">10. Flow</button>
+            </div>
+        </div>
+
+        <!-- Cenas Three.js -->
+        <div class="mb-5">
+            <h3 class="text-orange-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas 3D (Three.js)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button onclick="changeScene(11)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-11">
+                    <span>11. City</span> <span class="text-gray-500 text-[10px] mt-1">[Q]</span>
+                </button>
+                <button onclick="changeScene(12)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-12">
+                    <span>12. Vortex</span> <span class="text-gray-500 text-[10px] mt-1">[W]</span>
+                </button>
+                <button onclick="changeScene(13)" class="p-2 bg-gray-800 hover:bg-orange-900 border border-gray-700 hover:border-orange-500 rounded transition text-center flex justify-between px-4" id="btn-scene-13">
+                    <span>13. Planet</span> <span class="text-gray-500 text-[10px] mt-1">[E]</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Seção de Áudio -->
+        <div class="mb-5">
+            <h3 class="text-green-400 font-bold mb-3 uppercase tracking-wider text-sm">Áudio & Beat</h3>
+            <div class="mb-3">
+                <label class="flex justify-between mb-1"><span>Sensibilidade</span> <span id="val-sens">1.5</span></label>
+                <input type="range" min="0.5" max="3.0" step="0.1" value="1.5" oninput="updateParam('sens', this.value)">
+            </div>
+            
+            <!-- Visualizador de Níveis -->
+            <div class="flex gap-1 h-8 mt-2">
+                <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
+                    <div id="bar-bass" class="bg-red-500 w-full opacity-80" style="height: 0%"></div>
+                </div>
+                <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
+                    <div id="bar-mid" class="bg-yellow-500 w-full opacity-80" style="height: 0%"></div>
+                </div>
+                <div class="flex-1 bg-gray-900 flex flex-col justify-end relative border border-gray-700">
+                    <div id="bar-treble" class="bg-blue-500 w-full opacity-80" style="height: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção Visual -->
+        <div class="mb-5">
+            <h3 class="text-yellow-400 font-bold mb-3 uppercase tracking-wider text-sm">Ajustes Visuais</h3>
+            
+            <!-- Seletor de Paleta -->
+            <div class="mb-3">
+                <label class="block mb-1"><span>Paleta de Cores</span></label>
+                <select id="palette-select" onchange="changePalette(this.value)" class="w-full bg-gray-900 border border-gray-700 text-white rounded p-2 text-sm focus:border-cyan-500 focus:outline-none">
+                    <option value="neon" selected>Neon</option>
+                    <option value="fire">Fogo</option>
+                    <option value="ocean">Oceano</option>
+                    <option value="forest">Floresta</option>
+                    <option value="sunset">Pôr do Sol</option>
+                    <option value="rainbow">Arco-íris</option>
+                    <option value="monochrome">Monocromático</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="flex justify-between mb-1"><span>Velocidade</span> <span id="val-speed">1.0</span></label>
+                <input type="range" min="0.1" max="3.0" step="0.1" value="1.0" oninput="updateParam('speed', this.value)">
+            </div>
+            <div class="mb-3">
+                <label class="flex justify-between mb-1"><span>Matiz (Cor)</span> <span id="val-hue">0</span></label>
+                <input type="range" min="0" max="360" step="1" value="0" oninput="updateParam('hue', this.value)">
+            </div>
+            <div class="mb-3">
+                <label class="flex justify-between mb-1"><span>Rastro (Trail)</span> <span id="val-trail">40</span></label>
+                <input type="range" min="0" max="255" step="5" value="40" oninput="updateParam('trail', this.value)">
+            </div>
+        </div>
+
+        <!-- Ações Globais -->
+        <div>
+            <button onmousedown="triggerStrobe(true)" onmouseup="triggerStrobe(false)" onmouseleave="triggerStrobe(false)" class="w-full py-3 bg-white text-black font-bold uppercase tracking-widest hover:bg-gray-200 active:bg-red-500 active:text-white transition rounded mb-2">
+                FLASH (Space)
+            </button>
+            <p class="text-gray-500 text-[10px] text-center italic">Tecla 'H' para abrir/fechar controles</p>
+        </div>
+    </div>
+
+    <script>
+        // Funções para comunicação com a janela principal
+        function changeScene(n) {
+            if (window.opener && typeof window.opener.changeScene === 'function') {
+                window.opener.changeScene(n);
+                updateSceneButtons(n);
+            }
+        }
+        
+        function updateParam(k, v) {
+            if (window.opener && typeof window.opener.updateParam === 'function') {
+                window.opener.updateParam(k, v);
+            }
+            document.getElementById(`val-${k}`).innerText = v;
+        }
+        
+        function triggerStrobe(v) {
+            if (window.opener && typeof window.opener.triggerStrobe === 'function') {
+                window.opener.triggerStrobe(v);
+            }
+        }
+        
+        function changePalette(paletteName) {
+            if (window.opener && typeof window.opener.changePalette === 'function') {
+                window.opener.changePalette(paletteName);
+            }
+        }
+        
+        function updateSceneButtons(currentScene) {
+            for (let i = 1; i <= 13; i++) {
+                let btn = document.getElementById(`btn-scene-${i}`);
+                if (btn) {
+                    let isThree = i > 10;
+                    let activeClass = isThree ? 'bg-orange-900 border-orange-500' : 'bg-cyan-900 border-cyan-500';
+                    let hoverClass = isThree ? 'hover:bg-orange-900 hover:border-orange-500' : 'hover:bg-cyan-900 hover:border-cyan-500';
+                    
+                    btn.className = `p-2 border rounded transition text-center ${i > 10 ? 'flex justify-between px-4' : ''} ${i === currentScene ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
+                }
+            }
+        }
+        
+        // Função helper para map (já que não temos p5.js aqui)
+        function map(value, start1, stop1, start2, stop2) {
+            return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
+        }
+        
+        // Atualizar FPS e UI de áudio periodicamente
+        setInterval(function() {
+            if (window.opener && window.opener.AudioManager) {
+                let audioData = window.opener.AudioManager.audioData;
+                if (audioData) {
+                    // Atualizar barras de áudio
+                    let barBass = document.getElementById('bar-bass');
+                    let barMid = document.getElementById('bar-mid');
+                    let barTreble = document.getElementById('bar-treble');
+                    
+                    if (barBass && audioData.bass !== undefined) {
+                        let height = map(audioData.bass, 0, 255, 0, 100);
+                        barBass.style.height = height + '%';
+                    }
+                    if (barMid && audioData.mid !== undefined) {
+                        let height = map(audioData.mid, 0, 255, 0, 100);
+                        barMid.style.height = height + '%';
+                    }
+                    if (barTreble && audioData.treble !== undefined) {
+                        let height = map(audioData.treble, 0, 255, 0, 100);
+                        barTreble.style.height = height + '%';
+                    }
+                }
+            }
+            
+            // Atualizar FPS
+            if (window.opener && typeof window.opener.frameRate === 'function') {
+                let fps = Math.floor(window.opener.frameRate());
+                document.getElementById('fps-counter').innerText = 'FPS: ' + fps;
+            }
+        }, 100);
+        
+        // Sincronizar valores iniciais quando a janela abrir
+        window.addEventListener('load', function() {
+            if (window.opener && window.opener.params) {
+                let params = window.opener.params;
+                document.getElementById('val-sens').innerText = params.sens || 1.5;
+                document.getElementById('val-speed').innerText = params.speed || 1.0;
+                document.getElementById('val-hue').innerText = params.hue || 0;
+                document.getElementById('val-trail').innerText = params.trail || 40;
+                
+                // Sincronizar sliders
+                let sensSlider = document.querySelector('input[oninput*="sens"]');
+                let speedSlider = document.querySelector('input[oninput*="speed"]');
+                let hueSlider = document.querySelector('input[oninput*="hue"]');
+                let trailSlider = document.querySelector('input[oninput*="trail"]');
+                
+                if (sensSlider) sensSlider.value = params.sens || 1.5;
+                if (speedSlider) speedSlider.value = params.speed || 1.0;
+                if (hueSlider) hueSlider.value = params.hue || 0;
+                if (trailSlider) trailSlider.value = params.trail || 40;
+                
+                // Sincronizar paleta
+                let paletteSelect = document.getElementById('palette-select');
+                if (paletteSelect && params.palette) {
+                    paletteSelect.value = params.palette;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

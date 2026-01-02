@@ -58,3 +58,39 @@ input[type=range]::-webkit-slider-runnable-track {
     display: none;
 }
 
+/* Modal Animations */
+#controls-overlay.show {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+#controls.show {
+    scale: 1 !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* Custom Scrollbar para o modal */
+#controls::-webkit-scrollbar {
+    width: 8px;
+}
+
+#controls::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+#controls::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 204, 0.3);
+    border-radius: 4px;
+}
+
+#controls::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 255, 204, 0.5);
+}
+
+/* Prevenir scroll do body quando modal está aberto */
+body.modal-open {
+    overflow: hidden;
+}
+

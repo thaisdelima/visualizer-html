@@ -46,6 +46,34 @@ window.changePalette = (paletteName) => {
         Controls.changePalette(paletteName);
     }
 };
+window.toggleControls = () => {
+    if (typeof Controls !== 'undefined') {
+        Controls.toggleControls();
+    }
+};
+
+// Configurar event listeners (funciona mesmo se o DOM já estiver carregado)
+function setupControlButtons() {
+    // Botão de abrir controles
+    let openBtn = document.getElementById('open-controls-btn');
+    if (openBtn) {
+        // Remover listener anterior se existir
+        openBtn.replaceWith(openBtn.cloneNode(true));
+        openBtn = document.getElementById('open-controls-btn');
+        openBtn.addEventListener('click', function() {
+            if (typeof Controls !== 'undefined') {
+                Controls.toggleControls();
+            }
+        });
+    }
+}
+
+// Executar quando o DOM estiver pronto ou imediatamente se já estiver
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupControlButtons);
+} else {
+    setupControlButtons();
+}
 
 // --- Configuração p5.js ---
 function setup() {
@@ -143,7 +171,22 @@ function draw() {
 
     // FPS
     if (frameCount % 30 === 0) {
-        document.getElementById('fps-counter').innerText = `FPS: ${floor(frameRate())}`;
+        let fpsCounter = document.getElementById('fps-counter');
+        if (fpsCounter) {
+            fpsCounter.innerText = `FPS: ${floor(frameRate())}`;
+        }
+        
+        // Atualizar FPS na janela popup se estiver aberta
+        if (typeof Controls !== 'undefined' && Controls.controlsWindow && !Controls.controlsWindow.closed) {
+            try {
+                let popupFpsCounter = Controls.controlsWindow.document.getElementById('fps-counter');
+                if (popupFpsCounter) {
+                    popupFpsCounter.innerText = `FPS: ${floor(frameRate())}`;
+                }
+            } catch (e) {
+                // Ignorar erros de cross-origin se houver
+            }
+        }
     }
 }
 
@@ -159,6 +202,12 @@ function keyPressed() {
     
     if (key === ' ') Controls.triggerStrobe(params, true);
     if (key === 'h' || key === 'H') Controls.toggleControls();
+    if (keyCode === ESC) {
+        let controls = document.getElementById('controls');
+        if (!controls.classList.contains('hidden')) {
+            Controls.toggleControls();
+        }
+    }
 }
 
 function keyReleased() {
