@@ -32,6 +32,24 @@
             </div>
         </div>
 
+        <!-- Upload de Mídia -->
+        <div class="mb-5 p-3 bg-gray-900/50 rounded border border-gray-700">
+            <h3 class="text-pink-400 font-bold mb-3 uppercase tracking-wider text-sm">Mídia de Referência</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block mb-1 text-xs text-gray-400">Imagem</label>
+                    <input type="file" id="image-upload" accept="image/*" class="w-full text-xs text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500">
+                </div>
+                <div>
+                    <label class="block mb-1 text-xs text-gray-400">Vídeo</label>
+                    <input type="file" id="video-upload" accept="video/*" class="w-full text-xs text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500">
+                </div>
+                <button onclick="clearMedia()" class="w-full py-2 bg-red-600/50 hover:bg-red-600 text-white text-xs rounded transition">
+                    Limpar Mídia
+                </button>
+            </div>
+        </div>
+
         <!-- Cenas p5.js -->
         <div class="mb-5">
             <h3 class="text-purple-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas 2D (p5.js)</h3>
@@ -46,6 +64,20 @@
                 <button onclick="changeScene(8)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-8">8. Pixels</button>
                 <button onclick="changeScene(9)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-9">9. Estrelas</button>
                 <button onclick="changeScene(10)" class="p-2 bg-gray-800 hover:bg-cyan-900 border border-gray-700 hover:border-cyan-500 rounded transition text-center" id="btn-scene-10">10. Flow</button>
+            </div>
+        </div>
+
+        <!-- Cenas com Mídia -->
+        <div class="mb-5">
+            <h3 class="text-pink-400 font-bold mb-3 uppercase tracking-wider text-sm">Cenas com Mídia</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <button onclick="changeScene(14)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-14">14. Imagem Distorcida</button>
+                <button onclick="changeScene(15)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-15">15. Partículas de Cor</button>
+                <button onclick="changeScene(16)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-16">16. Vídeo Reativo</button>
+                <button onclick="changeScene(17)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-17">17. Pixel Art</button>
+                <button onclick="changeScene(18)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-18">18. Contornos Reativos</button>
+                <button onclick="changeScene(19)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-19">19. Formas Reativas</button>
+                <button onclick="changeScene(20)" class="p-2 bg-gray-800 hover:bg-pink-900 border border-gray-700 hover:border-pink-500 rounded transition text-center" id="btn-scene-20">20. Partículas de Forma</button>
             </div>
         </div>
 
@@ -158,14 +190,31 @@
         }
         
         function updateSceneButtons(currentScene) {
-            for (let i = 1; i <= 13; i++) {
+            // Cenas 2D (1-10)
+            for (let i = 1; i <= 10; i++) {
                 let btn = document.getElementById(`btn-scene-${i}`);
                 if (btn) {
-                    let isThree = i > 10;
-                    let activeClass = isThree ? 'bg-orange-900 border-orange-500' : 'bg-cyan-900 border-cyan-500';
-                    let hoverClass = isThree ? 'hover:bg-orange-900 hover:border-orange-500' : 'hover:bg-cyan-900 hover:border-cyan-500';
-                    
-                    btn.className = `p-2 border rounded transition text-center ${i > 10 ? 'flex justify-between px-4' : ''} ${i === currentScene ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
+                    let activeClass = 'bg-cyan-900 border-cyan-500';
+                    let hoverClass = 'hover:bg-cyan-900 hover:border-cyan-500';
+                    btn.className = `p-2 border rounded transition text-center ${i === currentScene ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
+                }
+            }
+            // Cenas 3D (11-13)
+            for (let i = 11; i <= 13; i++) {
+                let btn = document.getElementById(`btn-scene-${i}`);
+                if (btn) {
+                    let activeClass = 'bg-orange-900 border-orange-500';
+                    let hoverClass = 'hover:bg-orange-900 hover:border-orange-500';
+                    btn.className = `p-2 border rounded transition text-center flex justify-between px-4 ${i === currentScene ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
+                }
+            }
+            // Cenas com Mídia (14-20)
+            for (let i = 14; i <= 20; i++) {
+                let btn = document.getElementById(`btn-scene-${i}`);
+                if (btn) {
+                    let activeClass = 'bg-pink-900 border-pink-500';
+                    let hoverClass = 'hover:bg-pink-900 hover:border-pink-500';
+                    btn.className = `p-2 border rounded transition text-center ${i === currentScene ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
                 }
             }
         }
@@ -207,8 +256,47 @@
             }
         }, 100);
         
-        // Sincronizar valores iniciais quando a janela abrir
+        // Funções de upload de mídia
+        function loadImage(file) {
+            if (window.opener && window.opener.MediaManager) {
+                window.opener.MediaManager.loadImage(file);
+            }
+        }
+        
+        function loadVideo(file) {
+            if (window.opener && window.opener.MediaManager) {
+                window.opener.MediaManager.loadVideo(file);
+            }
+        }
+        
+        function clearMedia() {
+            if (window.opener && window.opener.MediaManager) {
+                window.opener.MediaManager.clear();
+            }
+        }
+        
+        // Event listeners para upload
         window.addEventListener('load', function() {
+            let imageUpload = document.getElementById('image-upload');
+            let videoUpload = document.getElementById('video-upload');
+            
+            if (imageUpload) {
+                imageUpload.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        loadImage(e.target.files[0]);
+                    }
+                });
+            }
+            
+            if (videoUpload) {
+                videoUpload.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        loadVideo(e.target.files[0]);
+                    }
+                });
+            }
+            
+            // Sincronizar valores iniciais
             if (window.opener && window.opener.params) {
                 let params = window.opener.params;
                 document.getElementById('val-sens').innerText = params.sens || 1.5;

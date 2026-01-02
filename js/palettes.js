@@ -94,6 +94,11 @@ const ColorPalettes = {
         let colorIndex = index % palette.colors.length;
         let color = palette.colors[colorIndex];
         
+        // Verificar se a cor existe e tem propriedades válidas
+        if (!color || typeof color.h === 'undefined') {
+            return { h: 0, s: 200, b: 255 };
+        }
+        
         // Aplica offset de hue se necessário
         if (offset !== 0) {
             color = { ...color, h: (color.h + offset) % 360 };

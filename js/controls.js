@@ -7,14 +7,31 @@ const Controls = {
         // Atualizar UI na janela popup se estiver aberta
         if (this.controlsWindow && !this.controlsWindow.closed) {
             try {
-                for (let i = 1; i <= 13; i++) {
+                // Cenas 2D (1-10)
+                for (let i = 1; i <= 10; i++) {
                     let btn = this.controlsWindow.document.getElementById(`btn-scene-${i}`);
                     if (btn) {
-                        let isThree = i > 10;
-                        let activeClass = isThree ? 'bg-orange-900 border-orange-500' : 'bg-cyan-900 border-cyan-500';
-                        let hoverClass = isThree ? 'hover:bg-orange-900 hover:border-orange-500' : 'hover:bg-cyan-900 hover:border-cyan-500';
-                        
-                        btn.className = `p-2 border rounded transition text-center ${i > 10 ? 'flex justify-between px-4' : ''} ${i === n ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
+                        let activeClass = 'bg-cyan-900 border-cyan-500';
+                        let hoverClass = 'hover:bg-cyan-900 hover:border-cyan-500';
+                        btn.className = `p-2 border rounded transition text-center ${i === n ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
+                    }
+                }
+                // Cenas 3D (11-13)
+                for (let i = 11; i <= 13; i++) {
+                    let btn = this.controlsWindow.document.getElementById(`btn-scene-${i}`);
+                    if (btn) {
+                        let activeClass = 'bg-orange-900 border-orange-500';
+                        let hoverClass = 'hover:bg-orange-900 hover:border-orange-500';
+                        btn.className = `p-2 border rounded transition text-center flex justify-between px-4 ${i === n ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
+                    }
+                }
+                // Cenas com Mídia (14-20)
+                for (let i = 14; i <= 20; i++) {
+                    let btn = this.controlsWindow.document.getElementById(`btn-scene-${i}`);
+                    if (btn) {
+                        let activeClass = 'bg-pink-900 border-pink-500';
+                        let hoverClass = 'hover:bg-pink-900 hover:border-pink-500';
+                        btn.className = `p-2 border rounded transition text-center ${i === n ? activeClass + ' text-white' : 'bg-gray-800 border-gray-700 text-gray-300 ' + hoverClass}`;
                     }
                 }
             } catch (e) {

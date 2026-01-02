@@ -240,10 +240,21 @@ const P5Scenes = {
     },
     
     sceneFlow(params, audioData) {
-        let res = 20;
+        let res =100;
         let cols = floor(width / res);
         let rows = floor(height / res);
         noStroke();
+        
+        // Calcular zoom baseado no áudio (pulse ao ritmo da música)
+        let bassPulse = map(audioData.bass, 0, 255, 0.8, 1.4) * params.sens;
+        let levelPulse = map(audioData.level, 0, 1, 0.9, 1.2);
+        let pulseScale = bassPulse * levelPulse;
+        
+        // Aplicar zoom global
+        push();
+        translate(width / 2, height / 2);
+        scale(pulseScale);
+        translate(-width / 2, -height / 2);
         
         let yoff = 0;
         for (let y = 0; y < rows; y++) {
@@ -256,11 +267,506 @@ const P5Scenes = {
                 push();
                 translate(x * res, y * res);
                 rotate(ang);
-                rect(0, 0, map(audioData.treble, 0, 255, 2, res * 1.5), 2);
+                rect(0, 0, map(audioData.treble, 0, 255, 5, res * 1.2), 5);
                 pop();
                 xoff += 0.1;
             }
             yoff += 0.1;
+        }
+        pop();
+    },
+    
+    // Cena 14: Imagem Distorcida - Distorce imagem baseado no áudio
+    sceneImageDistorted(params, audioData) {
+        translate(-width / 2, -height / 2);
+        
+        if (!MediaManager.hasImage() || !MediaManager.currentImage) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Carregue uma imagem nos controles', width / 2, height / 2);
+            return;
+        }
+        
+        let img = MediaManager.currentImage;
+        // Reduzir distorção - de 0-50 para 0-15
+        let distortion = map(audioData.bass, 0, 255, 0, 15) * params.sens * 0.4;
+        let waveSpeed = frameCount * 0.02 * params.speed;
+        
+        // Calcular dimensões para ocupar toda a tela mantendo proporção
+        let imgAspect = img.width / img.height;
+        let screenAspect = width / height;
+        let displayWidth, displayHeight;
+        let offsetX = 0, offsetY = 0;
+        
+        if (imgAspect > screenAspect) {
+            displayWidth = width;
+            displayHeight = width / imgAspect;
+            offsetY = (height - displayHeight) / 2;
+        } else {
+            displayHeight = height;
+            displayWidth = height * imgAspect;
+            offsetX = (width - displayWidth) / 2;
+        }
+        
+        // Desenhar imagem com distorção suave ocupando toda a área
+        for (let y = 0; y < displayHeight; y += 8) {
+            beginShape();
+            noFill();
+            strokeWeight(1.5);
+            
+            for (let x = 0; x < displayWidth; x += 3) {
+                let waveX = x + offsetX + sin((y + offsetY) * 0.008 + waveSpeed) * distortion;
+                let waveY = y + offsetY + cos((x + offsetX) * 0.008 + waveSpeed) * distortion * 0.3;
+                
+                // Obter cor da imagem na posição (mapeada corretamente)
+                let imgX = map(x, 0, displayWidth, 0, img.width);
+                let imgY = map(y, 0, displayHeight, 0, img.height);
+                let imgColor = MediaManager.getImageColor(imgX, imgY);
+                stroke(imgColor.h, imgColor.s, imgColor.b, 180);
+                
+                vertex(waveX, waveY);
+            }
+            endShape();
+        }
+    },
+    
+    // Cena 15: Partículas de Cor - Partículas baseadas nas cores da imagem
+    sceneColorParticles(params, particles, audioData) {
+        translate(-width / 2, -height / 2);
+        
+        if (!MediaManager.hasImage()) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Carregue uma imagem nos controles', width / 2, height / 2);
+            return;
+        }
+        
+        // Criar partículas baseadas nas cores da imagem
+        if (frameCount % 3 === 0 && audioData.bass > 100) {
+            let colors = MediaManager.getMainColors(10);
+            for (let i = 0; i < 3; i++) {
+                if (colors.length > 0) {
+                    let color = colors[floor(random(colors.length))];
+                    particles.push(new ColorParticle(color));
+                }
+            }
+        }
+        
+        // Atualizar e desenhar partículas
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.update(audioData.level, params.speed);
+            p.display();
+            if (p.isDead()) {
+                particles.splice(i, 1);
+            }
+        }
+    },
+    
+    // Cena 16: Vídeo Reativo - Vídeo com efeitos baseados no áudio
+    sceneVideoReactive(params, audioData) {
+        translate(-width / 2, -height / 2);
+        
+        if (!MediaManager.hasVideo() || !MediaManager.currentVideo) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Carregue um vídeo nos controles', width / 2, height / 2);
+            return;
+        }
+        
+        let vid = MediaManager.currentVideo;
+        // Reduzir efeitos - escala mais sutil
+        let scaleFactor = map(audioData.bass, 0, 255, 0.95, 1.05) * params.sens * 0.3;
+        let rotation = sin(frameCount * 0.01 * params.speed) * map(audioData.mid, 0, 255, 0, 3);
+        
+        push();
+        translate(width / 2, height / 2);
+        rotate(rotation);
+        scale(1 + scaleFactor);
+        
+        // Calcular dimensões para ocupar toda a tela mantendo proporção
+        let vidAspect = vid.width / vid.height;
+        let screenAspect = width / height;
+        let displayWidth, displayHeight;
+        
+        if (vidAspect > screenAspect) {
+            displayWidth = width;
+            displayHeight = width / vidAspect;
+        } else {
+            displayHeight = height;
+            displayWidth = height * vidAspect;
+        }
+        
+        // Aplicar filtros baseados no áudio (mais sutil)
+        tint(255, map(audioData.treble, 0, 255, 200, 255));
+        image(vid, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
+        noTint();
+        
+        pop();
+        
+        // Adicionar efeitos de brilho nos picos (mais sutil)
+        if (audioData.bass > 220) {
+            blendMode(ADD);
+            fill(255, 255, 255, 20);
+            noStroke();
+            ellipse(width / 2, height / 2, width * 0.3, height * 0.3);
+            blendMode(BLEND);
+        }
+    },
+    
+    // Cena 17: Pixel Art - Pixeliza imagem baseado no áudio
+    scenePixelArt(params, audioData) {
+        
+        if (!MediaManager.hasImage() || !MediaManager.currentImage) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Carregue uma imagem nos controles', width / 2, height / 2);
+            return;
+        }
+        
+        let img = MediaManager.currentImage;
+        
+        // Pixelização reativa ao ritmo da música
+        let basePixelSize = map(audioData.bass, 0, 255, 4, 20) * params.sens;
+        let levelPulse = map(audioData.level, 0, 1, 0.85, 1.15);
+        let midVariation = sin(frameCount * 0.1 + audioData.mid * 0.01) * 2;
+        let pixelSize = basePixelSize * levelPulse + midVariation;
+        pixelSize = max(4, min(25, pixelSize));
+        
+        noStroke();
+        
+        // Mudar para modo RGB uma vez antes do loop
+        push();
+        colorMode(RGB, 255);
+        
+        // Calcular dimensões para COBRIR toda a tela (cover mode)
+        let imgAspect = img.width / img.height;
+        let screenAspect = width / height;
+        
+        // Calcular escala para cobrir toda a tela
+        let scaleX = width / img.width;
+        let scaleY = height / img.height;
+        let coverScale = max(scaleX, scaleY);
+        
+        // Calcular offset da imagem para centralizar
+        let scaledWidth = img.width * coverScale;
+        let scaledHeight = img.height * coverScale;
+        let offsetX = (scaledWidth - width) / 2;
+        let offsetY = (scaledHeight - height) / 2;
+        
+        // Desenhar pixels da imagem ocupando TODA a tela
+        for (let y = 0; y < height; y += pixelSize) {
+            for (let x = 0; x < width; x += pixelSize) {
+                // Mapear coordenadas da tela para coordenadas da imagem
+                let imgX = ((x + offsetX) / coverScale);
+                let imgY = ((y + offsetY) / coverScale);
+                
+                // Garantir que está dentro dos limites
+                imgX = constrain(floor(imgX), 0, img.width - 1);
+                imgY = constrain(floor(imgY), 0, img.height - 1);
+                
+                // Obter cor da imagem
+                let imgColor = img.get(imgX, imgY);
+                
+                // Obter componentes RGB
+                let r = red(imgColor);
+                let g = green(imgColor);
+                let b = blue(imgColor);
+                
+                // Brilho reativo ao ritmo
+                let brightness = map(audioData.level, 0, 1, 0.9, 1.1);
+                r = constrain(r * brightness, 0, 255);
+                g = constrain(g * brightness, 0, 255);
+                b = constrain(b * brightness, 0, 255);
+                
+                // Efeito de brilho nos picos
+                if (audioData.bass > 200) {
+                    let glow = map(audioData.bass, 200, 255, 0, 0.25);
+                    r = constrain(r * (1 + glow), 0, 255);
+                    g = constrain(g * (1 + glow), 0, 255);
+                    b = constrain(b * (1 + glow), 0, 255);
+                }
+                
+                // Desenhar pixel
+                fill(r, g, b);
+                rect(x, y, pixelSize, pixelSize);
+            }
+        }
+        
+        // Restaurar modo HSB
+        pop();
+    },
+    
+    // Cena 18: Contornos Reativos - Desenha contornos da imagem processada que reagem ao som
+    sceneReactiveContours(params, audioData) {
+        translate(-width / 2, -height / 2);
+        
+        if (!MediaManager.hasImage() || !MediaManager.currentImage) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Carregue uma imagem nos controles', width / 2, height / 2);
+            return;
+        }
+        
+        let contours = MediaManager.getContours();
+        let bounds = MediaManager.getSubjectBounds();
+        
+        if (!bounds || contours.length === 0) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Processando imagem...', width / 2, height / 2);
+            return;
+        }
+        
+        // Calcular escala para centralizar o assunto
+        let img = MediaManager.currentImage;
+        let imgAspect = img.width / img.height;
+        let screenAspect = width / height;
+        let scaleX = width / img.width;
+        let scaleY = height / img.height;
+        let imgScale = min(scaleX, scaleY) * 0.8; // 80% da tela
+        
+        let centerX = width / 2;
+        let centerY = height / 2;
+        let offsetX = centerX - bounds.centerX * imgScale;
+        let offsetY = centerY - bounds.centerY * imgScale;
+        
+        // Desenhar contornos com efeitos reativos ao áudio
+        let bassIntensity = map(audioData.bass, 0, 255, 0.5, 2);
+        let midIntensity = map(audioData.mid, 0, 255, 0.8, 1.5);
+        let trebleIntensity = map(audioData.treble, 0, 255, 0.7, 1.3);
+        
+        noFill();
+        
+        // Desenhar múltiplas camadas de contornos
+        for (let layer = 0; layer < 3; layer++) {
+            let layerOffset = layer * map(audioData.bass, 0, 255, 2, 8);
+            let strokeW = map(audioData.level, 0, 1, 1, 4) - layer * 0.5;
+            strokeW = max(0.5, strokeW);
+            
+            for (let i = 0; i < contours.length; i++) {
+                let contour = contours[i];
+                if (contour.length < 3) continue;
+                
+                // Cor baseada na posição e áudio
+                let colorIndex = (i + layer) % 4;
+                let hueOffset = map(i, 0, contours.length, 0, 60) + 
+                               map(audioData.bass, 0, 255, 0, 30) + 
+                               params.hue;
+                let color = this.getPaletteColor(params, audioData, colorIndex, hueOffset);
+                
+                let alpha = map(layer, 0, 2, 255, 100) * 
+                           map(audioData.level, 0, 1, 0.6, 1);
+                stroke(color.h, color.s, color.b, alpha);
+                strokeWeight(strokeW);
+                
+                beginShape();
+                for (let j = 0; j < contour.length; j += max(1, floor(contour.length / 200))) {
+                    let x = contour[j].x * imgScale + offsetX + 
+                           sin(frameCount * 0.05 + j * 0.1) * layerOffset * bassIntensity;
+                    let y = contour[j].y * imgScale + offsetY + 
+                           cos(frameCount * 0.05 + j * 0.1) * layerOffset * midIntensity;
+                    
+                    // Adicionar distorção baseada no áudio
+                    let distortion = map(audioData.treble, 0, 255, 0, 5) * trebleIntensity;
+                    x += sin(frameCount * 0.1 + j * 0.2) * distortion;
+                    y += cos(frameCount * 0.1 + j * 0.2) * distortion;
+                    
+                    vertex(x, y);
+                }
+                endShape(CLOSE);
+            }
+        }
+        
+        // Adicionar partículas nos pontos de contorno nos picos de áudio
+        if (audioData.bass > 200) {
+            noStroke();
+            for (let i = 0; i < contours.length; i++) {
+                let contour = contours[i];
+                if (contour.length === 0) continue;
+                
+                // Amostrar alguns pontos do contorno
+                for (let j = 0; j < contour.length; j += max(5, floor(contour.length / 20))) {
+                    let x = contour[j].x * imgScale + offsetX;
+                    let y = contour[j].y * imgScale + offsetY;
+                    
+                    let colorIndex = i % 4;
+                    let color = this.getPaletteColor(params, audioData, colorIndex, params.hue);
+                    fill(color.h, color.s, color.b, 200);
+                    
+                    let size = map(audioData.bass, 200, 255, 2, 8);
+                    ellipse(x, y, size, size);
+                }
+            }
+        }
+    },
+    
+    // Cena 19: Formas Reativas - Usa as formas da imagem para criar efeitos visuais reativos
+    sceneReactiveShapes(params, audioData) {
+        translate(-width / 2, -height / 2);
+        
+        if (!MediaManager.hasImage() || !MediaManager.currentImage) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Carregue uma imagem nos controles', width / 2, height / 2);
+            return;
+        }
+        
+        let processedImg = MediaManager.getProcessedImage();
+        let bounds = MediaManager.getSubjectBounds();
+        
+        if (!bounds || !processedImg) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Processando imagem...', width / 2, height / 2);
+            return;
+        }
+        
+        // Calcular escala e posição
+        let img = MediaManager.currentImage;
+        let imgAspect = img.width / img.height;
+        let screenAspect = width / height;
+        let scaleX = width / img.width;
+        let scaleY = height / img.height;
+        let imgScale = min(scaleX, scaleY) * 0.9;
+        
+        let centerX = width / 2;
+        let centerY = height / 2;
+        let offsetX = centerX - bounds.centerX * imgScale;
+        let offsetY = centerY - bounds.centerY * imgScale;
+        
+        // Efeitos baseados no áudio
+        let bassScale = map(audioData.bass, 0, 255, 0.95, 1.15) * params.sens;
+        let rotation = sin(frameCount * 0.02 * params.speed) * map(audioData.mid, 0, 255, 0, 10);
+        let pulse = map(audioData.level, 0, 1, 0.9, 1.1);
+        
+        push();
+        translate(centerX, centerY);
+        rotate(rotation);
+        scale(bassScale * pulse);
+        translate(-centerX, -centerY);
+        
+        // Desenhar imagem processada com efeitos
+        tint(255, map(audioData.treble, 0, 255, 150, 255));
+        image(processedImg, offsetX, offsetY, img.width * imgScale, img.height * imgScale);
+        noTint();
+        pop();
+        
+        // Adicionar efeitos de brilho e partículas
+        let contours = MediaManager.getContours();
+        if (contours.length > 0 && audioData.bass > 180) {
+            blendMode(ADD);
+            noStroke();
+            
+            for (let i = 0; i < min(5, contours.length); i++) {
+                let contour = contours[i];
+                if (contour.length === 0) continue;
+                
+                // Encontrar centro do contorno
+                let sumX = 0, sumY = 0;
+                for (let point of contour) {
+                    sumX += point.x;
+                    sumY += point.y;
+                }
+                let contourCenterX = (sumX / contour.length) * imgScale + offsetX;
+                let contourCenterY = (sumY / contour.length) * imgScale + offsetY;
+                
+                // Brilho pulsante
+                let colorIndex = i % 4;
+                let color = this.getPaletteColor(params, audioData, colorIndex, params.hue + i * 30);
+                let glowSize = map(audioData.bass, 180, 255, 50, 200) * params.sens;
+                let alpha = map(audioData.bass, 180, 255, 50, 150);
+                
+                fill(color.h, color.s, color.b, alpha);
+                ellipse(contourCenterX, contourCenterY, glowSize, glowSize);
+            }
+            
+            blendMode(BLEND);
+        }
+        
+        // Adicionar linhas conectando contornos nos picos
+        if (audioData.treble > 200 && contours.length > 1) {
+            strokeWeight(1);
+            for (let i = 0; i < min(10, contours.length); i++) {
+                for (let j = i + 1; j < min(10, contours.length); j++) {
+                    if (contours[i].length === 0 || contours[j].length === 0) continue;
+                    
+                    let p1 = contours[i][floor(contours[i].length / 2)];
+                    let p2 = contours[j][floor(contours[j].length / 2)];
+                    
+                    let x1 = p1.x * imgScale + offsetX;
+                    let y1 = p1.y * imgScale + offsetY;
+                    let x2 = p2.x * imgScale + offsetX;
+                    let y2 = p2.y * imgScale + offsetY;
+                    
+                    let color = this.getPaletteColor(params, audioData, (i + j) % 4, params.hue);
+                    stroke(color.h, color.s, color.b, 100);
+                    line(x1, y1, x2, y2);
+                }
+            }
+        }
+    },
+    
+    // Cena 20: Partículas de Forma - Partículas que seguem as formas da imagem
+    sceneShapeParticles(params, particles, audioData) {
+        translate(-width / 2, -height / 2);
+        
+        if (!MediaManager.hasImage() || !MediaManager.currentImage) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Carregue uma imagem nos controles', width / 2, height / 2);
+            return;
+        }
+        
+        let contours = MediaManager.getContours();
+        let bounds = MediaManager.getSubjectBounds();
+        
+        if (!bounds || contours.length === 0) {
+            fill(0, 0, 100);
+            textAlign(CENTER, CENTER);
+            text('Processando imagem...', width / 2, height / 2);
+            return;
+        }
+        
+        // Calcular escala
+        let img = MediaManager.currentImage;
+        let scaleX = width / img.width;
+        let scaleY = height / img.height;
+        let imgScale = min(scaleX, scaleY) * 0.8;
+        
+        let centerX = width / 2;
+        let centerY = height / 2;
+        let offsetX = centerX - bounds.centerX * imgScale;
+        let offsetY = centerY - bounds.centerY * imgScale;
+        
+        // Criar partículas baseadas nos contornos
+        if (frameCount % 2 === 0 && audioData.bass > 100) {
+            for (let i = 0; i < contours.length; i++) {
+                if (contours[i].length === 0) continue;
+                
+                // Amostrar pontos do contorno
+                let sampleRate = max(1, floor(contours[i].length / 50));
+                for (let j = 0; j < contours[i].length; j += sampleRate) {
+                    if (random(1) < 0.1) { // 10% de chance
+                        let point = contours[i][j];
+                        let x = point.x * imgScale + offsetX;
+                        let y = point.y * imgScale + offsetY;
+                        
+                        let imgColor = MediaManager.getImageColor(point.x, point.y);
+                        particles.push(new ShapeParticle(x, y, imgColor, audioData));
+                    }
+                }
+            }
+        }
+        
+        // Atualizar e desenhar partículas
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.update(audioData, params);
+            p.display();
+            if (p.isDead()) {
+                particles.splice(i, 1);
+            }
         }
     }
 };

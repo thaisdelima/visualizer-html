@@ -29,9 +29,13 @@ const AudioManager = {
         
         // Mostrar mensagem de carregamento
         const button = document.querySelector('#start-overlay button');
-        const originalText = button.textContent;
-        button.textContent = 'Solicitando acesso ao microfone...';
-        button.disabled = true;
+        let originalText = '';
+        
+        if (button) {
+            originalText = button.textContent;
+            button.textContent = 'Solicitando acesso ao microfone...';
+            button.disabled = true;
+        }
         
         // userStartAudio() precisa ser chamado diretamente na interação do usuário
         // Isso inicializa o contexto de áudio do p5.js
@@ -46,7 +50,9 @@ const AudioManager = {
     
     _initializeAudio(button, originalText) {
         try {
-            button.textContent = 'Iniciando sistema...';
+            if (button) {
+                button.textContent = 'Iniciando sistema...';
+            }
             
             console.log('Criando AudioIn...');
             // Criar o microfone - o p5.js vai solicitar permissão automaticamente quando chamarmos start()
@@ -68,8 +74,18 @@ const AudioManager = {
                     
                     console.log('Áudio inicializado com sucesso!');
                     this.isAudioStarted = true;
-                    document.getElementById('start-overlay').classList.add('opacity-0', 'pointer-events-none');
-                    document.getElementById('controls').classList.remove('hidden');
+                    
+                    // Esconder overlay de início se existir
+                    let startOverlay = document.getElementById('start-overlay');
+                    if (startOverlay) {
+                        startOverlay.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                    
+                    // Mostrar botão de controles se existir (não é mais necessário, mas mantido para compatibilidade)
+                    let controlsBtn = document.getElementById('open-controls-btn');
+                    if (controlsBtn) {
+                        controlsBtn.style.display = 'block';
+                    }
                 } catch (error) {
                     console.error('Erro ao criar FFT:', error);
                     this._handleError(error, button, originalText);
@@ -90,9 +106,11 @@ const AudioManager = {
             console.error('Stack:', error.stack);
         }
         
-        // Restaurar botão
-        button.textContent = originalText;
-        button.disabled = false;
+        // Restaurar botão se existir
+        if (button) {
+            button.textContent = originalText;
+            button.disabled = false;
+        }
         
         let errorMsg = 'Erro ao iniciar o sistema de áudio.';
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {

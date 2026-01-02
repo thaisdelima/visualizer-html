@@ -52,6 +52,21 @@ window.toggleControls = () => {
     }
 };
 
+// Expor MediaManager globalmente
+if (typeof MediaManager !== 'undefined') {
+    window.MediaManager = MediaManager;
+    // Pré-carregar modelo TensorFlow em background (opcional, melhora performance)
+    // O modelo será carregado quando necessário, mas podemos iniciar o carregamento antecipadamente
+    if (typeof bodyPix !== 'undefined' && typeof tf !== 'undefined') {
+        // Carregar modelo em background após um pequeno delay para não bloquear a inicialização
+        setTimeout(() => {
+            MediaManager.initTensorFlowModel().catch(err => {
+                console.log('Modelo TensorFlow será carregado sob demanda:', err);
+            });
+        }, 2000);
+    }
+}
+
 // Configurar event listeners (funciona mesmo se o DOM já estiver carregado)
 function setupControlButtons() {
     // Botão de abrir controles
@@ -87,7 +102,11 @@ function setup() {
     initP5Objects();
     
     // Inicializar Three.js
-    ThreeScenes.initThreeJS();
+    if (typeof ThreeScenes !== 'undefined') {
+        ThreeScenes.initThreeJS();
+    } else {
+        console.error('ThreeScenes não está definido. Verifique se scenes-three.js foi carregado.');
+    }
 }
 
 function initP5Objects() {
@@ -111,7 +130,9 @@ function initMatrixDrops() {
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
     initMatrixDrops();
-    ThreeScenes.resizeThreeJS();
+    if (typeof ThreeScenes !== 'undefined' && ThreeScenes.resizeThreeJS) {
+        ThreeScenes.resizeThreeJS();
+    }
 }
 
 // --- Loop Principal (p5.js conduz tudo) ---
@@ -124,8 +145,12 @@ function draw() {
     }
 
     // Controle de Renderização
-    if (currentScene > 10) {
-        // MODO 3D: Three.js
+    if (currentScene > 10 && currentScene <= 13 || currentScene === 14) {
+        // MODO 3D: Three.js (cenas 11-13 e 14)
+        if (typeof ThreeScenes === 'undefined' || !ThreeScenes.getThreeRenderer) {
+            console.error('ThreeScenes não está disponível');
+            return;
+        }
         clear();
         ThreeScenes.getThreeRenderer().domElement.style.display = 'block';
         ThreeScenes.drawThreeJS(currentScene, params, AudioManager.audioData);
@@ -134,8 +159,10 @@ function draw() {
             background(255);
         }
     } else {
-        // MODO 2D: p5.js
-        ThreeScenes.getThreeRenderer().domElement.style.display = 'none';
+        // MODO 2D: p5.js (cenas 1-10 e 15-17)
+        if (typeof ThreeScenes !== 'undefined' && ThreeScenes.getThreeRenderer) {
+            ThreeScenes.getThreeRenderer().domElement.style.display = 'none';
+        }
 
         if (params.strobe) {
             background(0, 0, 255);
@@ -150,7 +177,7 @@ function draw() {
         }
 
         push();
-        if (![7, 8, 10].includes(currentScene)) {
+        if (![7, 8, 10, 14, 15, 16, 17, 18, 19, 20].includes(currentScene)) {
             translate(width / 2, height / 2);
         }
 
@@ -165,6 +192,12 @@ function draw() {
             case 8: P5Scenes.scenePixels(params, AudioManager.audioData); break;
             case 9: P5Scenes.sceneStarfield(params, stars, AudioManager.audioData); break;
             case 10: P5Scenes.sceneFlow(params, AudioManager.audioData); break;
+            case 15: P5Scenes.sceneColorParticles(params, particles, AudioManager.audioData); break;
+            case 16: P5Scenes.sceneVideoReactive(params, AudioManager.audioData); break;
+            case 17: P5Scenes.scenePixelArt(params, AudioManager.audioData); break;
+            case 18: P5Scenes.sceneReactiveContours(params, AudioManager.audioData); break;
+            case 19: P5Scenes.sceneReactiveShapes(params, AudioManager.audioData); break;
+            case 20: P5Scenes.sceneShapeParticles(params, particles, AudioManager.audioData); break;
         }
         pop();
     }
